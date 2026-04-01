@@ -21,6 +21,47 @@ is the same — undelivered messages are saved as pending.
 Message history is persisted to DynamoDB on every send and can be fetched via the REST API.
 
 
+## DynamoDB Tables
+
+### ServerRegistry
+| Attribute      | Key | Type   | Description                        |
+|----------------|-----|--------|------------------------------------|
+| `serverId`     | PK  | String | Unique server identifier           |
+| `queueUrl`     |     | String | SQS queue URL for this server      |
+| `ip`           |     | String | Server IP address                  |
+| `registeredAt` |     | String | ISO-8601 timestamp of registration |
+
+### UserConnections
+| Attribute  | Key | Type   | Description                               |
+|------------|-----|--------|-------------------------------------------|
+| `userId`   | PK  | String | Unique user identifier                    |
+| `serverId` |     | String | Server the user is currently connected to |
+
+### ConversationMembers
+| Attribute        | Key | Type   | Description                    |
+|------------------|-----|--------|--------------------------------|
+| `conversationId` | PK  | String | Unique conversation identifier |
+| `userId`         | SK  | String | Member of the conversation     |
+
+### Messages
+| Attribute        | Key | Type   | Description                          |
+|------------------|-----|--------|--------------------------------------|
+| `conversationId` | PK  | String | Conversation this message belongs to |
+| `sentAt`         | SK  | String | ISO-8601 timestamp of send time      |
+| `fromUserId`     |     | String | Sender's user ID                     |
+| `content`        |     | String | Message content                      |
+
+### PendingMessages
+| Attribute        | Key | Type   | Description                              |
+|------------------|-----|--------|------------------------------------------|
+| `userId`         | PK  | String | Recipient user ID (offline at send time) |
+| `messageId`      | SK  | String | UUID for the pending message             |
+| `fromUserId`     |     | String | Sender's user ID                         |
+| `conversationId` |     | String | Conversation this message belongs to     |
+| `content`        |     | String | Message content                          |
+| `sentAt`         |     | String | ISO-8601 timestamp of send time          |
+
+
 ## How to run locally
 1) `docker compose -f docker-compose.dev.yml build --no-cache`
 2) `docker compose -f docker-compose.dev.yml up`
