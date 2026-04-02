@@ -11,6 +11,7 @@ import software.amazon.awssdk.services.dynamodb.model.DescribeTableRequest
 import software.amazon.awssdk.services.dynamodb.model.GetItemRequest
 import software.amazon.awssdk.services.dynamodb.model.GetItemResponse
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest
+import software.amazon.awssdk.services.dynamodb.model.ResourceInUseException
 import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException
 import software.amazon.awssdk.services.dynamodb.waiters.DynamoDbWaiter
 import java.util.function.Consumer
@@ -40,6 +41,16 @@ class UserRegistryTest {
 
         verify { dynamoClient.createTable(any<CreateTableRequest>()) }
         verify { waiter.waitUntilTableExists(any<Consumer<DescribeTableRequest.Builder>>()) }
+    }
+
+    @Test
+    fun `init does not throw when table already exists on creation race`() {
+        every { dynamoClient.describeTable(any<Consumer<DescribeTableRequest.Builder>>()) } throws
+            ResourceNotFoundException.builder().message("Table not found").build()
+        every { dynamoClient.createTable(any<CreateTableRequest>()) } throws
+            ResourceInUseException.builder().message("Table already exists").build()
+
+        registry.init()
     }
 
     @Test

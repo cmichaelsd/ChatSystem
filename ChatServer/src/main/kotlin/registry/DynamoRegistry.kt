@@ -22,28 +22,30 @@ abstract class DynamoRegistry(protected val dynamoClient: DynamoDbClient) {
             dynamoClient.describeTable { it.tableName(tableName) }
         } catch (e: ResourceNotFoundException) {
             logger.info("$tableName table not found, creating...")
-            dynamoClient.createTable(
-                CreateTableRequest.builder()
-                    .tableName(tableName)
-                    .billingMode(BillingMode.PAY_PER_REQUEST)
-                    .attributeDefinitions(
-                        AttributeDefinition.builder()
-                            .attributeName(partitionKey)
-                            .attributeType(ScalarAttributeType.S)
-                            .build(),
-                    )
-                    .keySchema(
-                        KeySchemaElement.builder()
-                            .attributeName(partitionKey)
-                            .keyType(KeyType.HASH)
-                            .build(),
-                    )
-                    .build(),
-            )
-            dynamoClient.waiter().waitUntilTableExists { it.tableName(tableName) }
-            logger.info("$tableName table created")
-        } catch (e: ResourceInUseException) {
-            logger.info("$tableName table already exists, skipping creation")
+            try {
+                dynamoClient.createTable(
+                    CreateTableRequest.builder()
+                        .tableName(tableName)
+                        .billingMode(BillingMode.PAY_PER_REQUEST)
+                        .attributeDefinitions(
+                            AttributeDefinition.builder()
+                                .attributeName(partitionKey)
+                                .attributeType(ScalarAttributeType.S)
+                                .build(),
+                        )
+                        .keySchema(
+                            KeySchemaElement.builder()
+                                .attributeName(partitionKey)
+                                .keyType(KeyType.HASH)
+                                .build(),
+                        )
+                        .build(),
+                )
+                dynamoClient.waiter().waitUntilTableExists { it.tableName(tableName) }
+                logger.info("$tableName table created")
+            } catch (e: ResourceInUseException) {
+                logger.info("$tableName table already exists, skipping creation")
+            }
         }
     }
 }

@@ -6,10 +6,12 @@ import io.mockk.verify
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
 import software.amazon.awssdk.services.dynamodb.model.CreateTableRequest
+import software.amazon.awssdk.services.dynamodb.model.DeleteItemRequest
 import software.amazon.awssdk.services.dynamodb.model.DescribeTableRequest
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest
 import software.amazon.awssdk.services.dynamodb.model.QueryRequest
 import software.amazon.awssdk.services.dynamodb.model.QueryResponse
+import software.amazon.awssdk.services.dynamodb.model.ResourceInUseException
 import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException
 import software.amazon.awssdk.services.dynamodb.waiters.DynamoDbWaiter
 import java.util.function.Consumer
@@ -42,10 +44,27 @@ class ConversationRegistryTest {
     }
 
     @Test
+    fun `init does not throw when table already exists on creation race`() {
+        every { dynamoClient.describeTable(any<Consumer<DescribeTableRequest.Builder>>()) } throws
+            ResourceNotFoundException.builder().message("Table not found").build()
+        every { dynamoClient.createTable(any<CreateTableRequest>()) } throws
+            ResourceInUseException.builder().message("Table already exists").build()
+
+        registry.init()
+    }
+
+    @Test
     fun `addMember writes conversationId and userId to DynamoDB`() {
         registry.addMember("conv-1", "alice")
 
         verify { dynamoClient.putItem(any<PutItemRequest>()) }
+    }
+
+    @Test
+    fun `removeMember calls deleteItem with conversationId and userId`() {
+        registry.removeMember("conv-1", "alice")
+
+        verify { dynamoClient.deleteItem(any<DeleteItemRequest>()) }
     }
 
     @Test

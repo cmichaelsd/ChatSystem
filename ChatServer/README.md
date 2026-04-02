@@ -65,21 +65,10 @@ Message history is persisted to DynamoDB on every send and can be fetched via th
 ## How to run locally
 1) `docker compose -f docker-compose.dev.yml build --no-cache`
 2) `docker compose -f docker-compose.dev.yml up`
-3) Seed a conversation into DynamoDB:
-```
-curl -X POST http://localhost:8080/dev/conversations \
-  -H "Content-Type: application/json" \
-  -d '{"conversationId":"conv1","memberIds":["userA","userB"]}'
-```
-4) In one terminal: `websocat ws://localhost:8080/chat?user_id=userA`
-5) In another terminal: `websocat ws://localhost:8081/chat?user_id=userB`
-6) Send a message from userA: `{"conversationId":"conv1","content":"hello"}`
-7) Fetch message history: `curl http://localhost:8080/conversations/conv1/messages`
-
-
-## Dev paths
-For simplicity there are dev paths available for local testing, you can see how to use them in the run locally section.
-They exist just to help set up data to ensure the service actually works.
+3) Create users and groups from ApiServer
+4) In one terminal: `websocat ws://localhost:8080/chat?user_id=<USER_A_ID>`
+5) In another terminal: `websocat ws://localhost:8081/chat?user_id=<USER_B_ID>`
+6) Send a message from userA: `{"conversationId":"<GROUP_ID>","content":"hello"}`
 
 
 ## How to test
