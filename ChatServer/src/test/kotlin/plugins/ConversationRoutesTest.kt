@@ -1,5 +1,6 @@
 package org.chatserver.plugins
 
+import io.ktor.client.request.delete
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -15,19 +16,19 @@ import org.koin.ktor.plugin.Koin
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class DevRoutesTest {
+class ConversationRoutesTest {
     @Test
-    fun `POST dev conversations returns 201 Created`() {
+    fun `POST conversations returns 201 Created`() {
         val registry = mockk<ConversationRegistry>(relaxed = true)
 
         testApplication {
             application {
-                this.install(Koin) { modules(module { single { registry } }) }
+                install(Koin) { modules(module { single { registry } }) }
                 configureSerialization()
-                configureDevRoutes()
+                configureConversationRoutes()
             }
             val response =
-                client.post("/dev/conversations") {
+                client.post("/conversations") {
                     contentType(ContentType.Application.Json)
                     setBody("""{"conversationId":"conv-1","memberIds":["alice","bob"]}""")
                 }
@@ -36,16 +37,16 @@ class DevRoutesTest {
     }
 
     @Test
-    fun `POST dev conversations calls addMember for each member`() {
+    fun `POST conversations calls addMember for each member`() {
         val registry = mockk<ConversationRegistry>(relaxed = true)
 
         testApplication {
             application {
-                this.install(Koin) { modules(module { single { registry } }) }
+                install(Koin) { modules(module { single { registry } }) }
                 configureSerialization()
-                configureDevRoutes()
+                configureConversationRoutes()
             }
-            client.post("/dev/conversations") {
+            client.post("/conversations") {
                 contentType(ContentType.Application.Json)
                 setBody("""{"conversationId":"conv-1","memberIds":["alice","bob","charlie"]}""")
             }
@@ -57,17 +58,17 @@ class DevRoutesTest {
     }
 
     @Test
-    fun `POST dev conversations with empty member list calls addMember zero times`() {
+    fun `POST conversations with empty member list returns 201`() {
         val registry = mockk<ConversationRegistry>(relaxed = true)
 
         testApplication {
             application {
-                this.install(Koin) { modules(module { single { registry } }) }
+                install(Koin) { modules(module { single { registry } }) }
                 configureSerialization()
-                configureDevRoutes()
+                configureConversationRoutes()
             }
             val response =
-                client.post("/dev/conversations") {
+                client.post("/conversations") {
                     contentType(ContentType.Application.Json)
                     setBody("""{"conversationId":"empty-conv","memberIds":[]}""")
                 }
@@ -75,5 +76,39 @@ class DevRoutesTest {
         }
 
         verify(exactly = 0) { registry.addMember(any(), any()) }
+    }
+
+    @Test
+    fun `POST conversations members userId returns 201 and calls addMember`() {
+        val registry = mockk<ConversationRegistry>(relaxed = true)
+
+        testApplication {
+            application {
+                install(Koin) { modules(module { single { registry } }) }
+                configureSerialization()
+                configureConversationRoutes()
+            }
+            val response = client.post("/conversations/conv-1/members/alice")
+            assertEquals(HttpStatusCode.Created, response.status)
+        }
+
+        verify { registry.addMember("conv-1", "alice") }
+    }
+
+    @Test
+    fun `DELETE conversations members userId returns 204 and calls removeMember`() {
+        val registry = mockk<ConversationRegistry>(relaxed = true)
+
+        testApplication {
+            application {
+                install(Koin) { modules(module { single { registry } }) }
+                configureSerialization()
+                configureConversationRoutes()
+            }
+            val response = client.delete("/conversations/conv-1/members/alice")
+            assertEquals(HttpStatusCode.NoContent, response.status)
+        }
+
+        verify { registry.removeMember("conv-1", "alice") }
     }
 }

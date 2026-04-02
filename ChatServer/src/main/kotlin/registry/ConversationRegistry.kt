@@ -2,6 +2,7 @@ package org.chatserver.registry
 
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
+import software.amazon.awssdk.services.dynamodb.model.DeleteItemRequest
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest
 import software.amazon.awssdk.services.dynamodb.model.QueryRequest
 
@@ -22,6 +23,23 @@ class ConversationRegistry(dynamoClient: DynamoDbClient) : DynamoCompositeRegist
             PutItemRequest.builder()
                 .tableName(tableName)
                 .item(
+                    mapOf(
+                        partitionKey to AttributeValue.fromS(conversationId),
+                        sortKey to AttributeValue.fromS(userId),
+                    ),
+                )
+                .build(),
+        )
+    }
+
+    fun removeMember(
+        conversationId: String,
+        userId: String,
+    ) {
+        dynamoClient.deleteItem(
+            DeleteItemRequest.builder()
+                .tableName(tableName)
+                .key(
                     mapOf(
                         partitionKey to AttributeValue.fromS(conversationId),
                         sortKey to AttributeValue.fromS(userId),

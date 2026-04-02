@@ -8,6 +8,8 @@ services:
     depends_on:
       - elasticmq
       - dynamodb-local
+    networks:
+      - chatsystem
 
   chatserver-b:
     build: .
@@ -17,14 +19,24 @@ services:
     depends_on:
       - elasticmq
       - dynamodb-local
+    networks:
+      - chatsystem
 
   elasticmq:
     image: softwaremill/elasticmq-native:latest
     ports:
       - "9324:9324"
+    networks:
+      - chatsystem
 
   dynamodb-local:
     image: amazon/dynamodb-local:latest
     ports:
       - "8000:8000"
     command: "-jar DynamoDBLocal.jar -sharedDb -inMemory"
+    networks:
+      - chatsystem
+
+networks:
+  chatsystem:
+    external: true

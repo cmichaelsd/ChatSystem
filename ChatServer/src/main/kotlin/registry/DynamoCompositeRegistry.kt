@@ -7,6 +7,7 @@ import software.amazon.awssdk.services.dynamodb.model.BillingMode
 import software.amazon.awssdk.services.dynamodb.model.CreateTableRequest
 import software.amazon.awssdk.services.dynamodb.model.KeySchemaElement
 import software.amazon.awssdk.services.dynamodb.model.KeyType
+import software.amazon.awssdk.services.dynamodb.model.ResourceInUseException
 import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException
 import software.amazon.awssdk.services.dynamodb.model.ScalarAttributeType
 
@@ -38,6 +39,8 @@ abstract class DynamoCompositeRegistry(protected val dynamoClient: DynamoDbClien
             )
             dynamoClient.waiter().waitUntilTableExists { it.tableName(tableName) }
             logger.info("$tableName table created")
+        } catch (e: ResourceInUseException) {
+            logger.info("$tableName table already exists, skipping creation")
         }
     }
 }
