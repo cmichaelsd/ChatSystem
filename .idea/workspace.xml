@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="34b1aec0-cf89-4672-82a0-84670729e71f" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/ApiServer/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ApiServer/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatServer/src/main/kotlin/Main.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ChatServer/src/main/kotlin/Main.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatServer/src/main/kotlin/plugins/DevRoutes.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatServer/src/main/kotlin/registry/ConversationRegistry.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ChatServer/src/main/kotlin/registry/ConversationRegistry.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatServer/src/test/kotlin/plugins/DevRoutesTest.kt" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 6
+}]]></component>
+  <component name="ProjectId" id="3BmhxIWXoXQRNTFItlLWwxMbGVQ" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "master",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "/home/cole/Projects/ChatSystem/ChatServer"
+  }
+}]]></component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="34b1aec0-cf89-4672-82a0-84670729e71f" name="Changes" comment="" />
+      <created>1775100397928</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1775100397928</updated>
+    </task>
+    <servers />
+  </component>
+</project>

@@ -62,13 +62,30 @@ Message history is persisted to DynamoDB on every send and can be fetched via th
 | `sentAt`         |     | String | ISO-8601 timestamp of send time          |
 
 
+## REST API
+
+### Conversation management (called by ApiServer)
+| Method   | Endpoint                                          | Description                              |
+|----------|---------------------------------------------------|------------------------------------------|
+| `POST`   | `/conversations`                                  | Create a conversation with initial members |
+| `POST`   | `/conversations/{conversationId}/members/{userId}`| Add a member to a conversation           |
+| `DELETE` | `/conversations/{conversationId}/members/{userId}`| Remove a member from a conversation      |
+
+### Message history
+| Method | Endpoint                                    | Description                        |
+|--------|---------------------------------------------|------------------------------------|
+| `GET`  | `/conversations/{conversationId}/messages`  | Fetch message history for a conversation |
+
+
 ## How to run locally
-1) `docker compose -f docker-compose.dev.yml build --no-cache`
-2) `docker compose -f docker-compose.dev.yml up`
-3) Create users and groups from ApiServer
-4) In one terminal: `websocat ws://localhost:8080/chat?user_id=<USER_A_ID>`
-5) In another terminal: `websocat ws://localhost:8081/chat?user_id=<USER_B_ID>`
-6) Send a message from userA: `{"conversationId":"<GROUP_ID>","content":"hello"}`
+1) Create the shared Docker network (once): `docker network create chatsystem`
+2) Start ApiServer: `docker compose -f docker-compose.dev.yml up` from `ApiServer/`
+3) `docker compose -f docker-compose.dev.yml build --no-cache`
+4) `docker compose -f docker-compose.dev.yml up`
+5) Create users and groups from ApiServer — this registers conversations in ChatServer automatically
+6) In one terminal: `websocat ws://localhost:8080/chat?user_id=<USER_A_ID>`
+7) In another terminal: `websocat ws://localhost:8081/chat?user_id=<USER_B_ID>`
+8) Send a message from userA: `{"conversationId":"<GROUP_ID>","content":"hello"}`
 
 
 ## How to test
