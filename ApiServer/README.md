@@ -50,3 +50,8 @@ Update `requirements.txt` by running `pip freeze > requirements.txt`
 
 ## How to update openapi.json
 `python generate_openapi.py`
+
+
+## How to test
+1) `pip install -r requirements-dev.txt`
+2) `pytest`
