@@ -8,15 +8,9 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
-import kotlinx.serialization.Serializable
-import org.chatserver.registry.ConversationRegistry
+import org.chatserver.data.registry.ConversationRegistry
+import org.chatserver.models.CreateConversationRequest
 import org.koin.ktor.ext.inject
-
-@Serializable
-data class CreateConversationRequest(
-    val conversationId: String,
-    val memberIds: List<String>,
-)
 
 fun Application.configureConversationRoutes() {
     val conversationRegistry by inject<ConversationRegistry>()

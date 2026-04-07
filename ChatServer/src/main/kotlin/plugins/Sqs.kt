@@ -3,8 +3,8 @@ package org.chatserver.plugins
 import io.ktor.server.application.Application
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.chatserver.sqs.SqsConsumer
-import org.chatserver.sqs.SqsQueueManager
+import org.chatserver.services.sqs.SqsConsumer
+import org.chatserver.services.sqs.SqsQueueManager
 import org.koin.ktor.ext.inject
 
 fun Application.configureSqs() {

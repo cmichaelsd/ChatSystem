@@ -10,7 +10,7 @@ import io.ktor.server.application.install
 import io.ktor.server.testing.testApplication
 import io.mockk.mockk
 import io.mockk.verify
-import org.chatserver.registry.ConversationRegistry
+import org.chatserver.data.registry.ConversationRegistry
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 import kotlin.test.Test

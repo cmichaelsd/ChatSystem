@@ -3,12 +3,12 @@ package org.chatserver.routing
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import org.chatserver.model.ChatMessage
-import org.chatserver.registry.ConversationRegistry
-import org.chatserver.registry.ServerRegistry
-import org.chatserver.registry.UserRegistry
-import org.chatserver.repository.MessageRepository
-import org.chatserver.repository.PendingMessageRepository
+import org.chatserver.data.registry.ConversationRegistry
+import org.chatserver.data.registry.ServerRegistry
+import org.chatserver.data.registry.UserRegistry
+import org.chatserver.data.repository.MessageRepository
+import org.chatserver.data.repository.PendingMessageRepository
+import org.chatserver.models.ChatMessage
 import software.amazon.awssdk.services.sqs.SqsClient
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import java.util.function.Consumer
@@ -95,7 +95,7 @@ class MessageRouterTest {
 
         router.route("alice", "conv-1", "hello")
 
-        // alice is both sender and the only member — no delivery attempted
+        // alice is both sender and the only member no delivery attempted
         verify(exactly = 0) { userRegistry.getServerId(any()) }
         // but message is still persisted
         verify { messageRepository.save("alice", "conv-1", "hello") }

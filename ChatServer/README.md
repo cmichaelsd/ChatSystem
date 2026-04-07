@@ -8,15 +8,13 @@ A chat server will register itself and its SQS queue URL with DynamoDB.
 When a user joins a given chat server the user is associated with the server in DynamoDB.
 Also, a mapping is kept of each user and their WebSocket session at runtime.
 
-When a user sends a message, the target user's server is found from DynamoDB and the associated
-SQS queue URL is used to route the message to that server for delivery.
+When a user sends a message, the target user's server is found from DynamoDB and the associated SQS queue URL is used to route the message to that server for delivery.
 
-If the target user is offline the message is saved to a pending messages table in DynamoDB
-and delivered when the user reconnects.
+If the target user is offline the message is saved to a pending messages table in DynamoDB and delivered when the user reconnects.
 
-Both 1-to-1 and group chat use the same conversation model. A conversation has members stored
-in DynamoDB and a message sent to a conversation is fanned out to all members. Offline behavior
-is the same — undelivered messages are saved as pending.
+Both 1-to-1 and group chat use the same conversation model. 
+A conversation has members stored in DynamoDB and a message sent to a conversation is fanned out to all members. Offline behavior is the same 
+- undelivered messages are saved as pending.
 
 Message history is persisted to DynamoDB on every send and can be fetched via the REST API.
 
@@ -65,16 +63,16 @@ Message history is persisted to DynamoDB on every send and can be fetched via th
 ## REST API
 
 ### Conversation management (called by ApiServer)
-| Method   | Endpoint                                          | Description                              |
-|----------|---------------------------------------------------|------------------------------------------|
-| `POST`   | `/conversations`                                  | Create a conversation with initial members |
-| `POST`   | `/conversations/{conversationId}/members/{userId}`| Add a member to a conversation           |
-| `DELETE` | `/conversations/{conversationId}/members/{userId}`| Remove a member from a conversation      |
+| Method   | Endpoint                                           | Description                                |
+|----------|----------------------------------------------------|--------------------------------------------|
+| `POST`   | `/conversations`                                   | Create a conversation with initial members |
+| `POST`   | `/conversations/{conversationId}/members/{userId}` | Add a member to a conversation             |
+| `DELETE` | `/conversations/{conversationId}/members/{userId}` | Remove a member from a conversation        |
 
 ### Message history
-| Method | Endpoint                                    | Description                        |
-|--------|---------------------------------------------|------------------------------------|
-| `GET`  | `/conversations/{conversationId}/messages`  | Fetch message history for a conversation |
+| Method | Endpoint                                   | Description                              |
+|--------|--------------------------------------------|------------------------------------------|
+| `GET`  | `/conversations/{conversationId}/messages` | Fetch message history for a conversation |
 
 
 ## How to run locally
@@ -82,10 +80,11 @@ Message history is persisted to DynamoDB on every send and can be fetched via th
 2) Start ApiServer: `docker compose -f docker-compose.dev.yml up` from `ApiServer/`
 3) `docker compose -f docker-compose.dev.yml build --no-cache`
 4) `docker compose -f docker-compose.dev.yml up`
-5) Create users and groups from ApiServer — this registers conversations in ChatServer automatically
-6) In one terminal: `websocat ws://localhost:8080/chat?user_id=<USER_A_ID>`
-7) In another terminal: `websocat ws://localhost:8081/chat?user_id=<USER_B_ID>`
-8) Send a message from userA: `{"conversationId":"<GROUP_ID>","content":"hello"}`
+5) Create users and groups from ApiServer - this registers conversations in ChatServer automatically
+6) Log in as each user via `POST /auth/login` and save the returned `access_token`
+7) In one terminal: `websocat ws://localhost:8080/chat?token=<USER_A_TOKEN>`
+8) In another terminal: `websocat ws://localhost:8081/chat?token=<USER_B_TOKEN>`
+9) Send a message from userA: `{"conversationId":"<GROUP_ID>","content":"hello"}`
 
 
 ## How to test

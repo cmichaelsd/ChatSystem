@@ -1,5 +1,7 @@
 package org.chatserver.plugins
 
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
 import io.ktor.client.plugins.websocket.webSocket
 import io.ktor.server.application.install
 import io.ktor.server.testing.testApplication
@@ -12,10 +14,10 @@ import io.mockk.verify
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import org.chatserver.model.ChatMessage
-import org.chatserver.model.InboundMessage
-import org.chatserver.registry.UserRegistry
-import org.chatserver.repository.PendingMessageRepository
+import org.chatserver.data.registry.UserRegistry
+import org.chatserver.data.repository.PendingMessageRepository
+import org.chatserver.models.ChatMessage
+import org.chatserver.models.InboundMessage
 import org.chatserver.routing.MessageRouter
 import org.chatserver.session.SessionStore
 import org.koin.dsl.module
@@ -23,6 +25,10 @@ import org.koin.ktor.plugin.Koin
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import io.ktor.client.plugins.websocket.WebSockets as ClientWebSockets
+
+private const val TEST_SECRET = "test-secret"
+
+private fun token(subject: String): String = JWT.create().withSubject(subject).sign(Algorithm.HMAC256(TEST_SECRET))
 
 class SocketsTest {
     @Test
@@ -35,7 +41,7 @@ class SocketsTest {
 
         testApplication {
             application {
-                this.install(Koin) {
+                install(Koin) {
                     modules(
                         module {
                             single { userRegistry }
@@ -45,10 +51,11 @@ class SocketsTest {
                         },
                     )
                 }
+                configureAuth(TEST_SECRET)
                 configureSockets()
             }
             val wsClient = createClient { install(ClientWebSockets) }
-            wsClient.webSocket("/chat?user_id=alice") { close() }
+            wsClient.webSocket("/chat?token=${token("alice")}") { close() }
         }
 
         verify { userRegistry.register("alice") }
@@ -70,7 +77,7 @@ class SocketsTest {
 
         testApplication {
             application {
-                this.install(Koin) {
+                install(Koin) {
                     modules(
                         module {
                             single { userRegistry }
@@ -80,10 +87,11 @@ class SocketsTest {
                         },
                     )
                 }
+                configureAuth(TEST_SECRET)
                 configureSockets()
             }
             val wsClient = createClient { install(ClientWebSockets) }
-            wsClient.webSocket("/chat?user_id=alice") {
+            wsClient.webSocket("/chat?token=${token("alice")}") {
                 withTimeout(2000) {
                     val frame = incoming.receive()
                     if (frame is Frame.Text) received.add(frame.readText())
@@ -106,7 +114,7 @@ class SocketsTest {
 
         testApplication {
             application {
-                this.install(Koin) {
+                install(Koin) {
                     modules(
                         module {
                             single { userRegistry }
@@ -116,10 +124,11 @@ class SocketsTest {
                         },
                     )
                 }
+                configureAuth(TEST_SECRET)
                 configureSockets()
             }
             val wsClient = createClient { install(ClientWebSockets) }
-            wsClient.webSocket("/chat?user_id=alice") {
+            wsClient.webSocket("/chat?token=${token("alice")}") {
                 send(Frame.Text(Json.encodeToString(InboundMessage("conv-1", "hello bob"))))
                 close()
             }
@@ -138,7 +147,7 @@ class SocketsTest {
 
         testApplication {
             application {
-                this.install(Koin) {
+                install(Koin) {
                     modules(
                         module {
                             single { userRegistry }
@@ -148,10 +157,11 @@ class SocketsTest {
                         },
                     )
                 }
+                configureAuth(TEST_SECRET)
                 configureSockets()
             }
             val wsClient = createClient { install(ClientWebSockets) }
-            wsClient.webSocket("/chat?user_id=alice") {
+            wsClient.webSocket("/chat?token=${token("alice")}") {
                 send(Frame.Text("not valid json {{{}}}"))
                 close()
             }
@@ -161,7 +171,7 @@ class SocketsTest {
     }
 
     @Test
-    fun `closes connection when user_id query param is missing`() {
+    fun `rejects connection when token is missing`() {
         val userRegistry = mockk<UserRegistry>(relaxed = true)
         val sessionStore = mockk<SessionStore>(relaxed = true)
         val messageRouter = mockk<MessageRouter>(relaxed = true)
@@ -169,7 +179,7 @@ class SocketsTest {
 
         testApplication {
             application {
-                this.install(Koin) {
+                install(Koin) {
                     modules(
                         module {
                             single { userRegistry }
@@ -179,12 +189,41 @@ class SocketsTest {
                         },
                     )
                 }
+                configureAuth(TEST_SECRET)
                 configureSockets()
             }
             val wsClient = createClient { install(ClientWebSockets) }
-            wsClient.webSocket("/chat") {
-                close()
+            runCatching { wsClient.webSocket("/chat") { } }
+        }
+
+        verify(exactly = 0) { userRegistry.register(any()) }
+    }
+
+    @Test
+    fun `rejects connection when token is signed with wrong secret`() {
+        val userRegistry = mockk<UserRegistry>(relaxed = true)
+        val sessionStore = mockk<SessionStore>(relaxed = true)
+        val messageRouter = mockk<MessageRouter>(relaxed = true)
+        val pendingRepo = mockk<PendingMessageRepository>(relaxed = true)
+        val badToken = JWT.create().withSubject("alice").sign(Algorithm.HMAC256("wrong-secret"))
+
+        testApplication {
+            application {
+                install(Koin) {
+                    modules(
+                        module {
+                            single { userRegistry }
+                            single { sessionStore }
+                            single { messageRouter }
+                            single { pendingRepo }
+                        },
+                    )
+                }
+                configureAuth(TEST_SECRET)
+                configureSockets()
             }
+            val wsClient = createClient { install(ClientWebSockets) }
+            runCatching { wsClient.webSocket("/chat?token=$badToken") { } }
         }
 
         verify(exactly = 0) { userRegistry.register(any()) }

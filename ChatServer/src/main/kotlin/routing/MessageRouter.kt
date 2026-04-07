@@ -2,12 +2,12 @@ package org.chatserver.routing
 
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import org.chatserver.model.ChatMessage
-import org.chatserver.registry.ConversationRegistry
-import org.chatserver.registry.ServerRegistry
-import org.chatserver.registry.UserRegistry
-import org.chatserver.repository.MessageRepository
-import org.chatserver.repository.PendingMessageRepository
+import org.chatserver.data.registry.ConversationRegistry
+import org.chatserver.data.registry.ServerRegistry
+import org.chatserver.data.registry.UserRegistry
+import org.chatserver.data.repository.MessageRepository
+import org.chatserver.data.repository.PendingMessageRepository
+import org.chatserver.models.ChatMessage
 import org.slf4j.LoggerFactory
 import software.amazon.awssdk.services.sqs.SqsClient
 

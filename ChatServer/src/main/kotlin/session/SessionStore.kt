@@ -18,4 +18,6 @@ class SessionStore {
     }
 
     fun get(userId: String): DefaultWebSocketServerSession? = sessions[userId]
+
+    fun getAll(): Set<String> = sessions.keys.toSet()
 }

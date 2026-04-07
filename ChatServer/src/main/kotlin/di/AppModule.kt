@@ -1,14 +1,15 @@
 package org.chatserver.di
 
-import org.chatserver.registry.ConversationRegistry
-import org.chatserver.registry.ServerRegistry
-import org.chatserver.registry.UserRegistry
-import org.chatserver.repository.MessageRepository
-import org.chatserver.repository.PendingMessageRepository
+import org.chatserver.data.registry.ConversationRegistry
+import org.chatserver.data.registry.ServerRegistry
+import org.chatserver.data.registry.UserRegistry
+import org.chatserver.data.repository.MessageRepository
+import org.chatserver.data.repository.PendingMessageRepository
 import org.chatserver.routing.MessageRouter
+import org.chatserver.services.presence.PresenceClient
+import org.chatserver.services.sqs.SqsConsumer
+import org.chatserver.services.sqs.SqsQueueManager
 import org.chatserver.session.SessionStore
-import org.chatserver.sqs.SqsConsumer
-import org.chatserver.sqs.SqsQueueManager
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider
@@ -50,4 +51,10 @@ val appModule =
         single { SqsConsumer(get(), get(), get()) }
         single { MessageRouter(get(), get(), get(), get(), get(), get()) }
         single { SessionStore() }
+        single {
+            PresenceClient(
+                presenceServerUrl = System.getenv("PRESENCE_SERVER_URL") ?: "http://localhost:8002",
+                internalApiKey = System.getenv("INTERNAL_API_KEY") ?: "",
+            )
+        }
     }

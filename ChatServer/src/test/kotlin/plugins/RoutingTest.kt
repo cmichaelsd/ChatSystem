@@ -8,8 +8,8 @@ import io.ktor.server.testing.testApplication
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.serialization.json.Json
-import org.chatserver.model.StoredMessage
-import org.chatserver.repository.MessageRepository
+import org.chatserver.data.repository.MessageRepository
+import org.chatserver.models.StoredMessage
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 import kotlin.test.Test
