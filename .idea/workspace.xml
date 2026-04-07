@@ -2,12 +2,26 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="34b1aec0-cf89-4672-82a0-84670729e71f" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/ApiServer/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ApiServer/.gitkeep" beforeDir="false" />
+      <change afterPath="$PROJECT_DIR$/ChatServer/src/main/kotlin/plugins/HealthResponse.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ChatServer/src/main/kotlin/presence/HeartbeatRequest.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/PresenceServer/docker-compose.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/PresenceServer/generate_openapi.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ApiServer/.env" beforeDir="false" afterPath="$PROJECT_DIR$/ApiServer/.env" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ApiServer/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/ApiServer/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ApiServer/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/ApiServer/docker-compose.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ApiServer/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/ApiServer/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatServer/.env" beforeDir="false" afterPath="$PROJECT_DIR$/ChatServer/.env" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatServer/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/ChatServer/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatServer/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/ChatServer/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatServer/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/ChatServer/docker-compose.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ChatServer/src/main/kotlin/Main.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ChatServer/src/main/kotlin/Main.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ChatServer/src/main/kotlin/plugins/DevRoutes.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/ChatServer/src/main/kotlin/registry/ConversationRegistry.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ChatServer/src/main/kotlin/registry/ConversationRegistry.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ChatServer/src/test/kotlin/plugins/DevRoutesTest.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatServer/src/main/kotlin/di/AppModule.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ChatServer/src/main/kotlin/di/AppModule.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatServer/src/main/kotlin/plugins/Routing.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ChatServer/src/main/kotlin/plugins/Routing.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatServer/src/main/kotlin/plugins/Sockets.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ChatServer/src/main/kotlin/plugins/Sockets.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatServer/src/main/kotlin/session/SessionStore.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ChatServer/src/main/kotlin/session/SessionStore.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatServer/src/test/kotlin/plugins/SocketsTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ChatServer/src/test/kotlin/plugins/SocketsTest.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PresenceServer/.gitkeep" beforeDir="false" afterPath="$PROJECT_DIR$/PresenceServer/README.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -17,9 +31,9 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 6
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 6
+}</component>
   <component name="ProjectId" id="3BmhxIWXoXQRNTFItlLWwxMbGVQ" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -29,6 +43,7 @@
   "keyToString": {
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
     "git-widget-placeholder": "master",
     "kotlin-language-version-configured": "true",
