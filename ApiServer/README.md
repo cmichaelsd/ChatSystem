@@ -34,14 +34,15 @@ Additionally, there are S2S calls, API Server will contact Chat Server to update
 1) Create the shared Docker network (once): `docker network create chatsystem`
 2) `docker compose -f docker-compose.dev.yml build --no-cache`
 3) `docker compose -f docker-compose.dev.yml up`
-4) Apply migrations: `docker compose -f docker-compose.dev.yml exec apiserver alembic upgrade head`
-5) Navigate to `localhost:8001/docs`
-6) For end-to-end testing move to ChatServer project and follow local testing instructions as well.
+4) Navigate to `localhost:8001/docs`
+5) For end-to-end testing move to ChatServer project and follow local testing instructions as well.
 
 
-## When models change
-1) Generate a migration: `docker compose -f docker-compose.dev.yml exec apiserver alembic revision --autogenerate -m "<WHAT_CHANGED>"`
-2) Apply it: `docker compose -f docker-compose.dev.yml exec apiserver alembic upgrade head`
+## How to push docker image to AWS ECR
+1) `aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin 657083456388.dkr.ecr.us-west-1.amazonaws.com`
+2) `docker build -t chatsystem-apiserver .`
+3) `docker tag chatsystem-apiserver:latest 657083456388.dkr.ecr.us-west-1.amazonaws.com/chatsystem/apiserver:latest`
+4) `docker push 657083456388.dkr.ecr.us-west-1.amazonaws.com/chatsystem/apiserver:latest`
 
 
 ## If packages are altered

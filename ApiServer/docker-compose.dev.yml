@@ -19,12 +19,17 @@ services:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
       POSTGRES_DB: chatsystem
+    volumes:
+      - pgdata:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U user -d chatsystem"]
       interval: 5s
       retries: 5
     networks:
       - chatsystem
+
+volumes:
+  pgdata:
 
 networks:
   chatsystem:
