@@ -87,6 +87,13 @@ Message history is persisted to DynamoDB on every send and can be fetched via th
 9) Send a message from userA: `{"conversationId":"<GROUP_ID>","content":"hello"}`
 
 
+## How to push docker image to AWS ECR
+1) `aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin 657083456388.dkr.ecr.us-west-1.amazonaws.com`
+2) `docker build -t chatsystem-chatserver .`
+3) `docker tag chatsystem-chatserver:latest 657083456388.dkr.ecr.us-west-1.amazonaws.com/chatsystem/chatserver:latest`
+4) `docker push 657083456388.dkr.ecr.us-west-1.amazonaws.com/chatsystem/chatserver:latest`
+
+
 ## How to test
 `./gradlew test clean`
 
