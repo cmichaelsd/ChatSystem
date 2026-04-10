@@ -17,9 +17,11 @@ import org.koin.ktor.plugin.Koin
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-private const val TEST_INTERNAL_KEY = "test-internal-key"
-
 class ConversationRoutesTest {
+    companion object {
+        private const val TEST_INTERNAL_KEY = "test-internal-key"
+    }
+
     @Test
     fun `POST conversations returns 201 Created`() {
         val registry = mockk<ConversationRegistry>(relaxed = true)

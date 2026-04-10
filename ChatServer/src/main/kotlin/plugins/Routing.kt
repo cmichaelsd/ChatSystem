@@ -26,11 +26,11 @@ fun Application.configureRouting(
             call.respond(HttpStatusCode.OK, HealthResponse("ok"))
         }
 
-        authenticate("auth-jwt") {
-            get("/conversations/{conversationId}/messages") {
-                val conversationId = call.parameters["conversationId"] ?: return@get
-                call.respond(messageRepository.getMessages(conversationId))
-            }
+        get("/conversations/{conversationId}/messages") {
+            if (call.request.headers["x-internal-key"] != internalApiKey)
+                return@get call.respond(HttpStatusCode.Forbidden)
+            val conversationId = call.parameters["conversationId"] ?: return@get
+            call.respond(messageRepository.getMessages(conversationId))
         }
 
         post("/presence/batch") {

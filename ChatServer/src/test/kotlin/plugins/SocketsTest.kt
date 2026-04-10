@@ -26,11 +26,11 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import io.ktor.client.plugins.websocket.WebSockets as ClientWebSockets
 
-private const val TEST_SECRET = "test-secret"
-
-private fun token(subject: String): String = JWT.create().withSubject(subject).sign(Algorithm.HMAC256(TEST_SECRET))
-
 class SocketsTest {
+    companion object {
+        private const val TEST_SECRET = "test-secret"
+    }
+
     @Test
     fun `registers user and cleans up on disconnect`() {
         val userRegistry = mockk<UserRegistry>(relaxed = true)
@@ -228,4 +228,6 @@ class SocketsTest {
 
         verify(exactly = 0) { userRegistry.register(any()) }
     }
+
+    private fun token(subject: String): String = JWT.create().withSubject(subject).sign(Algorithm.HMAC256(TEST_SECRET))
 }

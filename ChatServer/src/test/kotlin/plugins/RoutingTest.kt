@@ -1,7 +1,5 @@
 package org.chatserver.plugins
 
-import com.auth0.jwt.JWT
-import com.auth0.jwt.algorithms.Algorithm
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
@@ -25,12 +23,11 @@ import org.koin.ktor.plugin.Koin
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-private const val ROUTING_TEST_SECRET = "routing-test-secret"
-
-private fun routingToken(subject: String): String =
-    JWT.create().withSubject(subject).sign(Algorithm.HMAC256(ROUTING_TEST_SECRET))
-
 class RoutingTest {
+    companion object {
+        private const val ROUTING_TEST_SECRET = "routing-test-secret"
+    }
+
     @Test
     fun `GET conversations returns 200 with stored messages`() {
         val repo = mockk<MessageRepository>()
@@ -49,7 +46,7 @@ class RoutingTest {
                 configureRouting(ROUTING_TEST_SECRET)
             }
             val response = client.get("/conversations/conv-1/messages") {
-                header("Authorization", "Bearer ${routingToken("alice")}")
+                header("x-internal-key", ROUTING_TEST_SECRET)
             }
             assertEquals(HttpStatusCode.OK, response.status)
             val body = response.bodyAsText()
@@ -72,7 +69,7 @@ class RoutingTest {
                 configureRouting(ROUTING_TEST_SECRET)
             }
             val response = client.get("/conversations/empty-conv/messages") {
-                header("Authorization", "Bearer ${routingToken("alice")}")
+                header("x-internal-key", ROUTING_TEST_SECRET)
             }
             assertEquals(HttpStatusCode.OK, response.status)
             assertEquals("[]", response.bodyAsText())
@@ -94,7 +91,7 @@ class RoutingTest {
                 configureRouting(ROUTING_TEST_SECRET)
             }
             val response = client.get("/conversations/conv-1/messages") {
-                header("Authorization", "Bearer ${routingToken("alice")}")
+                header("x-internal-key", ROUTING_TEST_SECRET)
             }
             val parsed = Json.decodeFromString<List<StoredMessage>>(response.bodyAsText())
             assertEquals(expected, parsed)
@@ -102,7 +99,7 @@ class RoutingTest {
     }
 
     @Test
-    fun `GET conversations returns 401 without JWT`() {
+    fun `GET conversations returns 403 without internal key`() {
         val repo = mockk<MessageRepository>()
         val presenceClient = mockk<PresenceClient>()
 
@@ -114,7 +111,7 @@ class RoutingTest {
                 configureRouting(ROUTING_TEST_SECRET)
             }
             val response = client.get("/conversations/conv-1/messages")
-            assertEquals(HttpStatusCode.Unauthorized, response.status)
+            assertEquals(HttpStatusCode.Forbidden, response.status)
         }
     }
 
