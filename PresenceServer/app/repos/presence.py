@@ -9,3 +9,9 @@ async def set_online(user_id: str, redis: Redis) -> None:
 
 async def is_online(user_id: str, redis: Redis) -> bool:
     return await redis.exists(f"presence:{user_id}") == 1
+
+
+async def are_online(user_ids: list[str], redis: Redis) -> dict[str, bool]:
+    keys = [f"presence:{uid}" for uid in user_ids]
+    values = await redis.mget(*keys)
+    return {uid: val is not None for uid, val in zip(user_ids, values)}
