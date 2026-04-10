@@ -22,6 +22,7 @@ Additionally, there are S2S calls, API Server will contact Chat Server to update
 ### Groups
 | Method   | Endpoint                              | Description                  |
 |----------|---------------------------------------|------------------------------|
+| `GET`    | `/groups`                             | List groups for current user |
 | `POST`   | `/groups`                             | Create a group               |
 | `GET`    | `/groups/{id}`                        | Get a group by ID            |
 | `DELETE` | `/groups/{id}`                        | Delete a group               |

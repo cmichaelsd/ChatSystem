@@ -14,6 +14,18 @@ async def get_me(current_user: User = Depends(get_current_user)):
     return current_user
 
 
+@router.get("/search", response_model=list[UserResponse])
+async def search_users(
+    username: str,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+):
+    result = await db.execute(
+        select(User).where(User.username.ilike(f"%{username}%")).limit(10)
+    )
+    return result.scalars().all()
+
+
 @router.get("/{user_id}", response_model=UserResponse)
 async def get_user(
     user_id: str,

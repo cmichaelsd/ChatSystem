@@ -25,3 +25,20 @@ async def test_get_user_not_found(client):
     headers = await register_and_login(client, "alice", "alice@test.com")
     resp = await client.get("/users/00000000-0000-0000-0000-000000000000", headers=headers)
     assert resp.status_code == 404
+
+
+async def test_search_users_returns_matches(client):
+    headers = await register_and_login(client, "alice", "alice@test.com")
+    await register_and_login(client, "alicia", "alicia@test.com")
+    await register_and_login(client, "bob", "bob@test.com")
+    resp = await client.get("/users/search?username=ali", headers=headers)
+    assert resp.status_code == 200
+    usernames = [u["username"] for u in resp.json()]
+    assert "alice" in usernames
+    assert "alicia" in usernames
+    assert "bob" not in usernames
+
+
+async def test_search_users_unauthenticated(client):
+    resp = await client.get("/users/search?username=alice")
+    assert resp.status_code == 401

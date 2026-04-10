@@ -4,10 +4,12 @@ import sys
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
 from app.database import Base, engine
-from app.routers import auth, users, groups
+from app.routers import auth, users, groups, conversations, presence
+from app.config import settings
 import app.models.user  # noqa: F401
 import app.models.group  # noqa: F401
 
@@ -46,9 +48,19 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="ChatSystem API", lifespan=lifespan)
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins_list,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(groups.router)
+app.include_router(conversations.router)
+app.include_router(presence.router)
 
 
 @app.get("/health")

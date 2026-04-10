@@ -14,6 +14,17 @@ from app.schemas.user import UserResponse
 router = APIRouter(prefix="/groups", tags=["groups"])
 
 
+@router.get("", response_model=list[GroupResponse])
+async def list_my_groups(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    result = await db.execute(
+        select(Group).join(GroupMember, Group.id == GroupMember.group_id).where(GroupMember.user_id == current_user.id)
+    )
+    return result.scalars().all()
+
+
 @router.post("", response_model=GroupResponse, status_code=status.HTTP_201_CREATED)
 async def create_group(
     payload: GroupCreate,
