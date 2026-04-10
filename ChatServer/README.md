@@ -70,21 +70,27 @@ Message history is persisted to DynamoDB on every send and can be fetched via th
 | `DELETE` | `/conversations/{conversationId}/members/{userId}` | Remove a member from a conversation        |
 
 ### Message history
-| Method | Endpoint                                   | Description                              |
-|--------|--------------------------------------------|------------------------------------------|
-| `GET`  | `/conversations/{conversationId}/messages` | Fetch message history for a conversation |
+| Method | Endpoint                                   | Auth | Description                              |
+|--------|--------------------------------------------|------|------------------------------------------|
+| `GET`  | `/conversations/{conversationId}/messages` | JWT  | Fetch message history for a conversation |
+
+### Presence (proxied to PresenceServer)
+| Method | Endpoint           | Auth | Description                                   |
+|--------|--------------------|------|-----------------------------------------------|
+| `POST` | `/presence/batch`  | JWT  | Get online/offline status for a list of users |
 
 
 ## How to run locally
 1) Create the shared Docker network (once): `docker network create chatsystem`
 2) Start ApiServer: `docker compose -f docker-compose.dev.yml up` from `ApiServer/`
-3) `docker compose -f docker-compose.dev.yml build --no-cache`
-4) `docker compose -f docker-compose.dev.yml up`
-5) Create users and groups from ApiServer - this registers conversations in ChatServer automatically
-6) Log in as each user via `POST /auth/login` and save the returned `access_token`
-7) In one terminal: `websocat ws://localhost:8080/chat?token=<USER_A_TOKEN>`
-8) In another terminal: `websocat ws://localhost:8081/chat?token=<USER_B_TOKEN>`
-9) Send a message from userA: `{"conversationId":"<GROUP_ID>","content":"hello"}`
+3) Start PresenceServer: `docker compose -f docker-compose.dev.yml up` from `PresenceServer/`
+4) `docker compose -f docker-compose.dev.yml build --no-cache`
+5) `docker compose -f docker-compose.dev.yml up`
+6) Create users and groups from ApiServer - this registers conversations in ChatServer automatically
+7) Log in as each user via `POST /auth/login` and save the returned `access_token`
+8) In one terminal: `websocat ws://localhost:8080/chat?token=<USER_A_TOKEN>`
+9) In another terminal: `websocat ws://localhost:8081/chat?token=<USER_B_TOKEN>`
+10) Send a message from userA: `{"conversationId":"<GROUP_ID>","content":"hello"}`
 
 
 ## How to push docker image to AWS ECR

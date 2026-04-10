@@ -19,11 +19,17 @@ fun Application.configureAuth(secret: String = System.getenv("JWT_SECRET") ?: er
                 if (credential.payload.subject != null) JWTPrincipal(credential.payload) else null
             }
             authHeader { call ->
-                val token = call.request.queryParameters["token"] ?: return@authHeader null
-                try {
-                    parseAuthorizationHeader("Bearer $token")
-                } catch (e: IllegalArgumentException) {
-                    null
+                val queryToken = call.request.queryParameters["token"]
+                if (queryToken != null) {
+                    try {
+                        parseAuthorizationHeader("Bearer $queryToken")
+                    } catch (e: IllegalArgumentException) {
+                        null
+                    }
+                } else {
+                    call.request.headers["Authorization"]?.let {
+                        try { parseAuthorizationHeader(it) } catch (e: IllegalArgumentException) { null }
+                    }
                 }
             }
             challenge { _, _ ->

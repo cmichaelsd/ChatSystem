@@ -33,10 +33,9 @@ class MessageRouter(
             return
         }
 
-        val recipients = members.filter { it != fromUserId }
         messageRepository.save(fromUserId, conversationId, content)
 
-        for (recipientId in recipients) {
+        for (recipientId in members) {
             deliver(ChatMessage(fromUserId, recipientId, conversationId, content))
         }
     }

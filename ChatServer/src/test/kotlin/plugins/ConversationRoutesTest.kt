@@ -1,6 +1,7 @@
 package org.chatserver.plugins
 
 import io.ktor.client.request.delete
+import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -16,6 +17,8 @@ import org.koin.ktor.plugin.Koin
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+private const val TEST_INTERNAL_KEY = "test-internal-key"
+
 class ConversationRoutesTest {
     @Test
     fun `POST conversations returns 201 Created`() {
@@ -25,11 +28,12 @@ class ConversationRoutesTest {
             application {
                 install(Koin) { modules(module { single { registry } }) }
                 configureSerialization()
-                configureConversationRoutes()
+                configureConversationRoutes(TEST_INTERNAL_KEY)
             }
             val response =
                 client.post("/conversations") {
                     contentType(ContentType.Application.Json)
+                    header("x-internal-key", TEST_INTERNAL_KEY)
                     setBody("""{"conversationId":"conv-1","memberIds":["alice","bob"]}""")
                 }
             assertEquals(HttpStatusCode.Created, response.status)
@@ -44,10 +48,11 @@ class ConversationRoutesTest {
             application {
                 install(Koin) { modules(module { single { registry } }) }
                 configureSerialization()
-                configureConversationRoutes()
+                configureConversationRoutes(TEST_INTERNAL_KEY)
             }
             client.post("/conversations") {
                 contentType(ContentType.Application.Json)
+                header("x-internal-key", TEST_INTERNAL_KEY)
                 setBody("""{"conversationId":"conv-1","memberIds":["alice","bob","charlie"]}""")
             }
         }
@@ -65,11 +70,12 @@ class ConversationRoutesTest {
             application {
                 install(Koin) { modules(module { single { registry } }) }
                 configureSerialization()
-                configureConversationRoutes()
+                configureConversationRoutes(TEST_INTERNAL_KEY)
             }
             val response =
                 client.post("/conversations") {
                     contentType(ContentType.Application.Json)
+                    header("x-internal-key", TEST_INTERNAL_KEY)
                     setBody("""{"conversationId":"empty-conv","memberIds":[]}""")
                 }
             assertEquals(HttpStatusCode.Created, response.status)
@@ -86,9 +92,11 @@ class ConversationRoutesTest {
             application {
                 install(Koin) { modules(module { single { registry } }) }
                 configureSerialization()
-                configureConversationRoutes()
+                configureConversationRoutes(TEST_INTERNAL_KEY)
             }
-            val response = client.post("/conversations/conv-1/members/alice")
+            val response = client.post("/conversations/conv-1/members/alice") {
+                header("x-internal-key", TEST_INTERNAL_KEY)
+            }
             assertEquals(HttpStatusCode.Created, response.status)
         }
 
@@ -103,12 +111,32 @@ class ConversationRoutesTest {
             application {
                 install(Koin) { modules(module { single { registry } }) }
                 configureSerialization()
-                configureConversationRoutes()
+                configureConversationRoutes(TEST_INTERNAL_KEY)
             }
-            val response = client.delete("/conversations/conv-1/members/alice")
+            val response = client.delete("/conversations/conv-1/members/alice") {
+                header("x-internal-key", TEST_INTERNAL_KEY)
+            }
             assertEquals(HttpStatusCode.NoContent, response.status)
         }
 
         verify { registry.removeMember("conv-1", "alice") }
+    }
+
+    @Test
+    fun `POST conversations without internal key returns 403`() {
+        val registry = mockk<ConversationRegistry>(relaxed = true)
+
+        testApplication {
+            application {
+                install(Koin) { modules(module { single { registry } }) }
+                configureSerialization()
+                configureConversationRoutes(TEST_INTERNAL_KEY)
+            }
+            val response = client.post("/conversations") {
+                contentType(ContentType.Application.Json)
+                setBody("""{"conversationId":"conv-1","memberIds":[]}""")
+            }
+            assertEquals(HttpStatusCode.Forbidden, response.status)
+        }
     }
 }

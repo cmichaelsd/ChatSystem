@@ -12,17 +12,24 @@ import org.chatserver.data.registry.ConversationRegistry
 import org.chatserver.models.CreateConversationRequest
 import org.koin.ktor.ext.inject
 
-fun Application.configureConversationRoutes() {
+fun Application.configureConversationRoutes(
+    internalApiKey: String = System.getenv("INTERNAL_API_KEY") ?: error("INTERNAL_API_KEY env var not set"),
+) {
     val conversationRegistry by inject<ConversationRegistry>()
+    conversationRegistry.init()
 
     routing {
         post("/conversations") {
+            if (call.request.headers["x-internal-key"] != internalApiKey)
+                return@post call.respond(HttpStatusCode.Forbidden)
             val request = call.receive<CreateConversationRequest>()
             request.memberIds.forEach { conversationRegistry.addMember(request.conversationId, it) }
             call.respond(HttpStatusCode.Created)
         }
 
         post("/conversations/{conversationId}/members/{userId}") {
+            if (call.request.headers["x-internal-key"] != internalApiKey)
+                return@post call.respond(HttpStatusCode.Forbidden)
             val conversationId = call.parameters["conversationId"] ?: return@post call.respond(HttpStatusCode.BadRequest)
             val userId = call.parameters["userId"] ?: return@post call.respond(HttpStatusCode.BadRequest)
             conversationRegistry.addMember(conversationId, userId)
@@ -30,6 +37,8 @@ fun Application.configureConversationRoutes() {
         }
 
         delete("/conversations/{conversationId}/members/{userId}") {
+            if (call.request.headers["x-internal-key"] != internalApiKey)
+                return@delete call.respond(HttpStatusCode.Forbidden)
             val conversationId = call.parameters["conversationId"] ?: return@delete call.respond(HttpStatusCode.BadRequest)
             val userId = call.parameters["userId"] ?: return@delete call.respond(HttpStatusCode.BadRequest)
             conversationRegistry.removeMember(conversationId, userId)
