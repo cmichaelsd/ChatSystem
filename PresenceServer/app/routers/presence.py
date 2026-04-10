@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from redis.asyncio import Redis
 
-from app.dependencies import get_current_user_id, verify_internal_key
+from app.dependencies import get_current_user_id, verify_internal_key  # get_current_user_id used by GET /{user_id}
 from app.redis import get_redis
 from app.repos.presence import set_online, is_online, are_online
 from app.schemas.presence import HeartbeatRequest, PresenceResponse, BatchPresenceRequest, BatchPresenceResponse
@@ -23,7 +23,7 @@ async def heartbeat(
 async def get_presence_batch(
     payload: BatchPresenceRequest,
     redis: Redis = Depends(get_redis),
-    _: str = Depends(get_current_user_id),
+    _: None = Depends(verify_internal_key),
 ):
     presence = await are_online(payload.user_ids, redis)
     return BatchPresenceResponse(presence=presence)

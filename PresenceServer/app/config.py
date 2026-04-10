@@ -7,7 +7,6 @@ class Settings(BaseSettings):
     internal_api_key: str
     algorithm: str = "HS256"
     heartbeat_ttl_seconds: int = 30
-
     model_config = {"env_file": ".env"}
 
 

@@ -1,8 +1,32 @@
 # PresenceServer
 
 ## Overview
-The PresenceServer basically just caches heartbeats and expires them automatically after a set period of time.
-If the users heartbeat exists they are online, if not they are offline.
+PresenceServer tracks whether users are online by caching heartbeats in Redis with a TTL. If a user's heartbeat key exists they're online, if it's expired they're offline. 
+ChatServer sends heartbeats on behalf of all connected users on a regular interval. 
+PresenceServer is internal-only - it sits behind an internal ALB and is never reachable directly from the browser. 
+Presence queries from clients are proxied through ChatServer.
+
+
+## REST API
+
+### Internal (called by ChatServer only)
+| Method | Endpoint              | Auth         | Description                              |
+|--------|-----------------------|--------------|------------------------------------------|
+| `POST` | `/presence/heartbeat` | Internal key | Mark a list of users as online           |
+
+### External (called by ChatServer on behalf of clients)
+| Method | Endpoint          | Auth | Description                                   |
+|--------|-------------------|------|-----------------------------------------------|
+| `POST` | `/presence/batch` | JWT  | Get online/offline status for a list of users |
+| `GET`  | `/presence/{id}`  | JWT  | Get online/offline status for a single user   |
+
+
+## How to run locally
+1) Create the shared Docker network (once): `docker network create chatsystem`
+2) `docker compose -f docker-compose.dev.yml build --no-cache`
+3) `docker compose -f docker-compose.dev.yml up`
+4) Navigate to `localhost:8002/docs`
+5) For end-to-end testing move to ChatServer project and follow local testing instructions as well.
 
 
 ## How to push docker image to AWS ECR

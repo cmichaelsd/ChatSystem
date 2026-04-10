@@ -36,3 +36,35 @@ async def test_get_presence_offline(client):
 async def test_get_presence_unauthenticated(unauthed_client):
     resp = await unauthed_client.get("/presence/user-1")
     assert resp.status_code == 401
+
+
+async def test_batch_presence_mixed(client, fake_redis):
+    await fake_redis.set("presence:user-1", "1", ex=30)
+    resp = await client.post("/presence/batch", json={"user_ids": ["user-1", "user-2"]})
+    assert resp.status_code == 200
+    presence = resp.json()["presence"]
+    assert presence["user-1"] is True
+    assert presence["user-2"] is False
+
+
+async def test_batch_presence_all_offline(client):
+    resp = await client.post("/presence/batch", json={"user_ids": ["user-1", "user-2"]})
+    assert resp.status_code == 200
+    presence = resp.json()["presence"]
+    assert presence["user-1"] is False
+    assert presence["user-2"] is False
+
+
+async def test_batch_presence_empty_list(client):
+    resp = await client.post("/presence/batch", json={"user_ids": []})
+    assert resp.status_code == 200
+    assert resp.json()["presence"] == {}
+
+
+async def test_batch_presence_wrong_key(unauthed_client):
+    resp = await unauthed_client.post(
+        "/presence/batch",
+        json={"user_ids": ["user-1"]},
+        headers={"x-internal-key": "wrongkey"},
+    )
+    assert resp.status_code == 403
