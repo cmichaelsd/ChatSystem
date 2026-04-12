@@ -2,8 +2,11 @@ package org.chatserver.plugins
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.plugins.websocket.webSocket
 import io.ktor.server.application.install
+import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.ktor.websocket.Frame
 import io.ktor.websocket.close
@@ -24,21 +27,19 @@ import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import io.ktor.client.plugins.websocket.WebSockets as ClientWebSockets
+import kotlin.time.Duration.Companion.milliseconds
 
 class SocketsTest {
     companion object {
         private const val TEST_SECRET = "test-secret"
     }
 
-    @Test
-    fun `registers user and cleans up on disconnect`() {
-        val userRegistry = mockk<UserRegistry>(relaxed = true)
-        val sessionStore = mockk<SessionStore>(relaxed = true)
-        val messageRouter = mockk<MessageRouter>(relaxed = true)
-        val pendingRepo = mockk<PendingMessageRepository>(relaxed = true)
-        every { pendingRepo.fetchAndClear("alice") } returns emptyList()
+    private val userRegistry = mockk<UserRegistry>(relaxed = true)
+    private val sessionStore = mockk<SessionStore>(relaxed = true)
+    private val messageRouter = mockk<MessageRouter>(relaxed = true)
+    private val pendingRepo = mockk<PendingMessageRepository>(relaxed = true)
 
+    private fun withChatApp(block: suspend ApplicationTestBuilder.(client: HttpClient) -> Unit) {
         testApplication {
             application {
                 install(Koin) {
@@ -54,8 +55,16 @@ class SocketsTest {
                 configureAuth(TEST_SECRET)
                 configureSockets()
             }
-            val wsClient = createClient { install(ClientWebSockets) }
-            wsClient.webSocket("/chat?token=${token("alice")}") { close() }
+            block(createClient { install(WebSockets) })
+        }
+    }
+
+    @Test
+    fun `registers user and cleans up on disconnect`() {
+        every { pendingRepo.fetchAndClear("alice") } returns emptyList()
+
+        withChatApp { client ->
+            client.webSocket("/ws?token=${token("alice")}") { close() }
         }
 
         verify { userRegistry.register("alice") }
@@ -66,33 +75,14 @@ class SocketsTest {
 
     @Test
     fun `delivers pending messages on connect`() {
-        val userRegistry = mockk<UserRegistry>(relaxed = true)
-        val sessionStore = mockk<SessionStore>(relaxed = true)
-        val messageRouter = mockk<MessageRouter>(relaxed = true)
-        val pendingRepo = mockk<PendingMessageRepository>(relaxed = true)
         val pending = listOf(ChatMessage("bob", "alice", "conv-1", "pending mail"))
         every { pendingRepo.fetchAndClear("alice") } returns pending
 
         val received = mutableListOf<String>()
 
-        testApplication {
-            application {
-                install(Koin) {
-                    modules(
-                        module {
-                            single { userRegistry }
-                            single { sessionStore }
-                            single { messageRouter }
-                            single { pendingRepo }
-                        },
-                    )
-                }
-                configureAuth(TEST_SECRET)
-                configureSockets()
-            }
-            val wsClient = createClient { install(ClientWebSockets) }
-            wsClient.webSocket("/chat?token=${token("alice")}") {
-                withTimeout(2000) {
+        withChatApp { client ->
+            client.webSocket("/ws?token=${token("alice")}") {
+                withTimeout(2000.milliseconds) {
                     val frame = incoming.receive()
                     if (frame is Frame.Text) received.add(frame.readText())
                 }
@@ -106,29 +96,10 @@ class SocketsTest {
 
     @Test
     fun `routes incoming text frames through MessageRouter`() {
-        val userRegistry = mockk<UserRegistry>(relaxed = true)
-        val sessionStore = mockk<SessionStore>(relaxed = true)
-        val messageRouter = mockk<MessageRouter>(relaxed = true)
-        val pendingRepo = mockk<PendingMessageRepository>(relaxed = true)
         every { pendingRepo.fetchAndClear("alice") } returns emptyList()
 
-        testApplication {
-            application {
-                install(Koin) {
-                    modules(
-                        module {
-                            single { userRegistry }
-                            single { sessionStore }
-                            single { messageRouter }
-                            single { pendingRepo }
-                        },
-                    )
-                }
-                configureAuth(TEST_SECRET)
-                configureSockets()
-            }
-            val wsClient = createClient { install(ClientWebSockets) }
-            wsClient.webSocket("/chat?token=${token("alice")}") {
+        withChatApp { client ->
+            client.webSocket("/ws?token=${token("alice")}") {
                 send(Frame.Text(Json.encodeToString(InboundMessage("conv-1", "hello bob"))))
                 close()
             }
@@ -139,29 +110,10 @@ class SocketsTest {
 
     @Test
     fun `ignores malformed JSON without crashing`() {
-        val userRegistry = mockk<UserRegistry>(relaxed = true)
-        val sessionStore = mockk<SessionStore>(relaxed = true)
-        val messageRouter = mockk<MessageRouter>(relaxed = true)
-        val pendingRepo = mockk<PendingMessageRepository>(relaxed = true)
         every { pendingRepo.fetchAndClear("alice") } returns emptyList()
 
-        testApplication {
-            application {
-                install(Koin) {
-                    modules(
-                        module {
-                            single { userRegistry }
-                            single { sessionStore }
-                            single { messageRouter }
-                            single { pendingRepo }
-                        },
-                    )
-                }
-                configureAuth(TEST_SECRET)
-                configureSockets()
-            }
-            val wsClient = createClient { install(ClientWebSockets) }
-            wsClient.webSocket("/chat?token=${token("alice")}") {
+        withChatApp { client ->
+            client.webSocket("/ws?token=${token("alice")}") {
                 send(Frame.Text("not valid json {{{}}}"))
                 close()
             }
@@ -172,28 +124,8 @@ class SocketsTest {
 
     @Test
     fun `rejects connection when token is missing`() {
-        val userRegistry = mockk<UserRegistry>(relaxed = true)
-        val sessionStore = mockk<SessionStore>(relaxed = true)
-        val messageRouter = mockk<MessageRouter>(relaxed = true)
-        val pendingRepo = mockk<PendingMessageRepository>(relaxed = true)
-
-        testApplication {
-            application {
-                install(Koin) {
-                    modules(
-                        module {
-                            single { userRegistry }
-                            single { sessionStore }
-                            single { messageRouter }
-                            single { pendingRepo }
-                        },
-                    )
-                }
-                configureAuth(TEST_SECRET)
-                configureSockets()
-            }
-            val wsClient = createClient { install(ClientWebSockets) }
-            runCatching { wsClient.webSocket("/chat") { } }
+        withChatApp { client ->
+            runCatching { client.webSocket("/ws") { } }
         }
 
         verify(exactly = 0) { userRegistry.register(any()) }
@@ -201,29 +133,10 @@ class SocketsTest {
 
     @Test
     fun `rejects connection when token is signed with wrong secret`() {
-        val userRegistry = mockk<UserRegistry>(relaxed = true)
-        val sessionStore = mockk<SessionStore>(relaxed = true)
-        val messageRouter = mockk<MessageRouter>(relaxed = true)
-        val pendingRepo = mockk<PendingMessageRepository>(relaxed = true)
         val badToken = JWT.create().withSubject("alice").sign(Algorithm.HMAC256("wrong-secret"))
 
-        testApplication {
-            application {
-                install(Koin) {
-                    modules(
-                        module {
-                            single { userRegistry }
-                            single { sessionStore }
-                            single { messageRouter }
-                            single { pendingRepo }
-                        },
-                    )
-                }
-                configureAuth(TEST_SECRET)
-                configureSockets()
-            }
-            val wsClient = createClient { install(ClientWebSockets) }
-            runCatching { wsClient.webSocket("/chat?token=$badToken") { } }
+        withChatApp { client ->
+            runCatching { client.webSocket("/ws?token=$badToken") { } }
         }
 
         verify(exactly = 0) { userRegistry.register(any()) }

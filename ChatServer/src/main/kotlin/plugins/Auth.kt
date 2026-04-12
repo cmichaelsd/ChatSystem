@@ -28,7 +28,11 @@ fun Application.configureAuth(secret: String = System.getenv("JWT_SECRET") ?: er
                     }
                 } else {
                     call.request.headers["Authorization"]?.let {
-                        try { parseAuthorizationHeader(it) } catch (e: IllegalArgumentException) { null }
+                        try {
+                            parseAuthorizationHeader(it)
+                        } catch (e: IllegalArgumentException) {
+                            null
+                        }
                     }
                 }
             }

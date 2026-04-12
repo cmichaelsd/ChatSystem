@@ -33,7 +33,7 @@ fun Application.configureSockets() {
 
     routing {
         authenticate("auth-jwt") {
-            webSocket("/chat") {
+            webSocket("/ws") {
                 val userId = call.principal<JWTPrincipal>()?.payload?.subject
                 if (userId == null) {
                     close()

@@ -20,16 +20,18 @@ fun Application.configureConversationRoutes(
 
     routing {
         post("/conversations") {
-            if (call.request.headers["x-internal-key"] != internalApiKey)
+            if (call.request.headers["x-internal-key"] != internalApiKey) {
                 return@post call.respond(HttpStatusCode.Forbidden)
+            }
             val request = call.receive<CreateConversationRequest>()
             request.memberIds.forEach { conversationRegistry.addMember(request.conversationId, it) }
             call.respond(HttpStatusCode.Created)
         }
 
         post("/conversations/{conversationId}/members/{userId}") {
-            if (call.request.headers["x-internal-key"] != internalApiKey)
+            if (call.request.headers["x-internal-key"] != internalApiKey) {
                 return@post call.respond(HttpStatusCode.Forbidden)
+            }
             val conversationId = call.parameters["conversationId"] ?: return@post call.respond(HttpStatusCode.BadRequest)
             val userId = call.parameters["userId"] ?: return@post call.respond(HttpStatusCode.BadRequest)
             conversationRegistry.addMember(conversationId, userId)
@@ -37,8 +39,9 @@ fun Application.configureConversationRoutes(
         }
 
         delete("/conversations/{conversationId}/members/{userId}") {
-            if (call.request.headers["x-internal-key"] != internalApiKey)
+            if (call.request.headers["x-internal-key"] != internalApiKey) {
                 return@delete call.respond(HttpStatusCode.Forbidden)
+            }
             val conversationId = call.parameters["conversationId"] ?: return@delete call.respond(HttpStatusCode.BadRequest)
             val userId = call.parameters["userId"] ?: return@delete call.respond(HttpStatusCode.BadRequest)
             conversationRegistry.removeMember(conversationId, userId)

@@ -28,11 +28,12 @@ class PresenceClient(
         }
 
     suspend fun batchPresence(userIds: List<String>): Map<String, Boolean> {
-        val response = client.post("$presenceServerUrl/presence/batch") {
-            contentType(ContentType.Application.Json)
-            header("x-internal-key", internalApiKey)
-            setBody(HeartbeatRequest(userIds = userIds))
-        }
+        val response =
+            client.post("$presenceServerUrl/presence/batch") {
+                contentType(ContentType.Application.Json)
+                header("x-internal-key", internalApiKey)
+                setBody(HeartbeatRequest(userIds = userIds))
+            }
         return response.body<PresenceBatchResponse>().presence
     }
 

@@ -9,6 +9,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.application.install
+import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
 import io.mockk.every
@@ -28,26 +29,41 @@ class RoutingTest {
         private const val ROUTING_TEST_SECRET = "routing-test-secret"
     }
 
+    private val repo = mockk<MessageRepository>()
+    private val presenceClient = mockk<PresenceClient>()
+
+    private fun withRoutingApp(block: suspend ApplicationTestBuilder.() -> Unit) {
+        testApplication {
+            application {
+                install(Koin) {
+                    modules(
+                        module {
+                            single { repo }
+                            single { presenceClient }
+                        },
+                    )
+                }
+                configureSerialization()
+                configureAuth(ROUTING_TEST_SECRET)
+                configureRouting(ROUTING_TEST_SECRET)
+            }
+            block()
+        }
+    }
+
     @Test
     fun `GET conversations returns 200 with stored messages`() {
-        val repo = mockk<MessageRepository>()
-        val presenceClient = mockk<PresenceClient>()
         every { repo.getMessages("conv-1") } returns
             listOf(
                 StoredMessage("alice", "conv-1", "hello", "2024-01-01T00:00:00Z"),
                 StoredMessage("bob", "conv-1", "hi", "2024-01-01T00:00:01Z"),
             )
 
-        testApplication {
-            application {
-                this.install(Koin) { modules(module { single { repo }; single { presenceClient } }) }
-                configureSerialization()
-                configureAuth(ROUTING_TEST_SECRET)
-                configureRouting(ROUTING_TEST_SECRET)
-            }
-            val response = client.get("/conversations/conv-1/messages") {
-                header("x-internal-key", ROUTING_TEST_SECRET)
-            }
+        withRoutingApp {
+            val response =
+                client.get("/conversations/conv-1/messages") {
+                    header("x-internal-key", ROUTING_TEST_SECRET)
+                }
             assertEquals(HttpStatusCode.OK, response.status)
             val body = response.bodyAsText()
             assert(body.contains("alice"))
@@ -57,20 +73,13 @@ class RoutingTest {
 
     @Test
     fun `GET conversations returns empty JSON array when no messages exist`() {
-        val repo = mockk<MessageRepository>()
-        val presenceClient = mockk<PresenceClient>()
         every { repo.getMessages("empty-conv") } returns emptyList()
 
-        testApplication {
-            application {
-                this.install(Koin) { modules(module { single { repo }; single { presenceClient } }) }
-                configureSerialization()
-                configureAuth(ROUTING_TEST_SECRET)
-                configureRouting(ROUTING_TEST_SECRET)
-            }
-            val response = client.get("/conversations/empty-conv/messages") {
-                header("x-internal-key", ROUTING_TEST_SECRET)
-            }
+        withRoutingApp {
+            val response =
+                client.get("/conversations/empty-conv/messages") {
+                    header("x-internal-key", ROUTING_TEST_SECRET)
+                }
             assertEquals(HttpStatusCode.OK, response.status)
             assertEquals("[]", response.bodyAsText())
         }
@@ -78,21 +87,14 @@ class RoutingTest {
 
     @Test
     fun `GET conversations response deserializes to StoredMessage list`() {
-        val repo = mockk<MessageRepository>()
-        val presenceClient = mockk<PresenceClient>()
         val expected = listOf(StoredMessage("alice", "conv-1", "test content", "2024-01-01T00:00:00Z"))
         every { repo.getMessages("conv-1") } returns expected
 
-        testApplication {
-            application {
-                this.install(Koin) { modules(module { single { repo }; single { presenceClient } }) }
-                configureSerialization()
-                configureAuth(ROUTING_TEST_SECRET)
-                configureRouting(ROUTING_TEST_SECRET)
-            }
-            val response = client.get("/conversations/conv-1/messages") {
-                header("x-internal-key", ROUTING_TEST_SECRET)
-            }
+        withRoutingApp {
+            val response =
+                client.get("/conversations/conv-1/messages") {
+                    header("x-internal-key", ROUTING_TEST_SECRET)
+                }
             val parsed = Json.decodeFromString<List<StoredMessage>>(response.bodyAsText())
             assertEquals(expected, parsed)
         }
@@ -100,16 +102,7 @@ class RoutingTest {
 
     @Test
     fun `GET conversations returns 403 without internal key`() {
-        val repo = mockk<MessageRepository>()
-        val presenceClient = mockk<PresenceClient>()
-
-        testApplication {
-            application {
-                this.install(Koin) { modules(module { single { repo }; single { presenceClient } }) }
-                configureSerialization()
-                configureAuth(ROUTING_TEST_SECRET)
-                configureRouting(ROUTING_TEST_SECRET)
-            }
+        withRoutingApp {
             val response = client.get("/conversations/conv-1/messages")
             assertEquals(HttpStatusCode.Forbidden, response.status)
         }
@@ -117,16 +110,7 @@ class RoutingTest {
 
     @Test
     fun `GET health returns 200 with ok status`() {
-        val repo = mockk<MessageRepository>()
-        val presenceClient = mockk<PresenceClient>()
-
-        testApplication {
-            application {
-                install(Koin) { modules(module { single { repo }; single { presenceClient } }) }
-                configureSerialization()
-                configureAuth(ROUTING_TEST_SECRET)
-                configureRouting(ROUTING_TEST_SECRET)
-            }
+        withRoutingApp {
             val response = client.get("/health")
             assertEquals(HttpStatusCode.OK, response.status)
             assertEquals("ok", Json.decodeFromString<HealthResponse>(response.bodyAsText()).status)
@@ -135,23 +119,16 @@ class RoutingTest {
 
     @Test
     fun `POST presence batch returns presence map with valid internal key`() {
-        val repo = mockk<MessageRepository>()
-        val presenceClient = mockk<PresenceClient>()
         coEvery { presenceClient.batchPresence(listOf("user-1", "user-2")) } returns
             mapOf("user-1" to true, "user-2" to false)
 
-        testApplication {
-            application {
-                install(Koin) { modules(module { single { repo }; single { presenceClient } }) }
-                configureSerialization()
-                configureAuth(ROUTING_TEST_SECRET)
-                configureRouting(ROUTING_TEST_SECRET)
-            }
-            val response = client.post("/presence/batch") {
-                contentType(ContentType.Application.Json)
-                header("x-internal-key", ROUTING_TEST_SECRET)
-                setBody("""{"user_ids":["user-1","user-2"]}""")
-            }
+        withRoutingApp {
+            val response =
+                client.post("/presence/batch") {
+                    contentType(ContentType.Application.Json)
+                    header("x-internal-key", ROUTING_TEST_SECRET)
+                    setBody("""{"user_ids":["user-1","user-2"]}""")
+                }
             assertEquals(HttpStatusCode.OK, response.status)
             val body = response.bodyAsText()
             assert(body.contains("user-1"))
@@ -161,20 +138,12 @@ class RoutingTest {
 
     @Test
     fun `POST presence batch returns 403 without internal key`() {
-        val repo = mockk<MessageRepository>()
-        val presenceClient = mockk<PresenceClient>()
-
-        testApplication {
-            application {
-                install(Koin) { modules(module { single { repo }; single { presenceClient } }) }
-                configureSerialization()
-                configureAuth(ROUTING_TEST_SECRET)
-                configureRouting(ROUTING_TEST_SECRET)
-            }
-            val response = client.post("/presence/batch") {
-                contentType(ContentType.Application.Json)
-                setBody("""{"user_ids":["user-1"]}""")
-            }
+        withRoutingApp {
+            val response =
+                client.post("/presence/batch") {
+                    contentType(ContentType.Application.Json)
+                    setBody("""{"user_ids":["user-1"]}""")
+                }
             assertEquals(HttpStatusCode.Forbidden, response.status)
         }
     }

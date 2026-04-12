@@ -8,6 +8,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.application.install
+import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.mockk.mockk
 import io.mockk.verify
@@ -22,16 +23,26 @@ class ConversationRoutesTest {
         private const val TEST_INTERNAL_KEY = "test-internal-key"
     }
 
-    @Test
-    fun `POST conversations returns 201 Created`() {
-        val registry = mockk<ConversationRegistry>(relaxed = true)
+    private val registry = mockk<ConversationRegistry>(relaxed = true)
 
+    private fun withConversationApp(block: suspend ApplicationTestBuilder.() -> Unit) {
         testApplication {
             application {
-                install(Koin) { modules(module { single { registry } }) }
+                install(Koin) {
+                    modules(module {
+                        single { registry }
+                    })
+                }
                 configureSerialization()
                 configureConversationRoutes(TEST_INTERNAL_KEY)
             }
+            block()
+        }
+    }
+
+    @Test
+    fun `POST conversations returns 201 Created`() {
+        withConversationApp {
             val response =
                 client.post("/conversations") {
                     contentType(ContentType.Application.Json)
@@ -44,14 +55,7 @@ class ConversationRoutesTest {
 
     @Test
     fun `POST conversations calls addMember for each member`() {
-        val registry = mockk<ConversationRegistry>(relaxed = true)
-
-        testApplication {
-            application {
-                install(Koin) { modules(module { single { registry } }) }
-                configureSerialization()
-                configureConversationRoutes(TEST_INTERNAL_KEY)
-            }
+        withConversationApp {
             client.post("/conversations") {
                 contentType(ContentType.Application.Json)
                 header("x-internal-key", TEST_INTERNAL_KEY)
@@ -66,14 +70,7 @@ class ConversationRoutesTest {
 
     @Test
     fun `POST conversations with empty member list returns 201`() {
-        val registry = mockk<ConversationRegistry>(relaxed = true)
-
-        testApplication {
-            application {
-                install(Koin) { modules(module { single { registry } }) }
-                configureSerialization()
-                configureConversationRoutes(TEST_INTERNAL_KEY)
-            }
+        withConversationApp {
             val response =
                 client.post("/conversations") {
                     contentType(ContentType.Application.Json)
@@ -88,17 +85,11 @@ class ConversationRoutesTest {
 
     @Test
     fun `POST conversations members userId returns 201 and calls addMember`() {
-        val registry = mockk<ConversationRegistry>(relaxed = true)
-
-        testApplication {
-            application {
-                install(Koin) { modules(module { single { registry } }) }
-                configureSerialization()
-                configureConversationRoutes(TEST_INTERNAL_KEY)
-            }
-            val response = client.post("/conversations/conv-1/members/alice") {
-                header("x-internal-key", TEST_INTERNAL_KEY)
-            }
+        withConversationApp {
+            val response =
+                client.post("/conversations/conv-1/members/alice") {
+                    header("x-internal-key", TEST_INTERNAL_KEY)
+                }
             assertEquals(HttpStatusCode.Created, response.status)
         }
 
@@ -107,17 +98,11 @@ class ConversationRoutesTest {
 
     @Test
     fun `DELETE conversations members userId returns 204 and calls removeMember`() {
-        val registry = mockk<ConversationRegistry>(relaxed = true)
-
-        testApplication {
-            application {
-                install(Koin) { modules(module { single { registry } }) }
-                configureSerialization()
-                configureConversationRoutes(TEST_INTERNAL_KEY)
-            }
-            val response = client.delete("/conversations/conv-1/members/alice") {
-                header("x-internal-key", TEST_INTERNAL_KEY)
-            }
+        withConversationApp {
+            val response =
+                client.delete("/conversations/conv-1/members/alice") {
+                    header("x-internal-key", TEST_INTERNAL_KEY)
+                }
             assertEquals(HttpStatusCode.NoContent, response.status)
         }
 
@@ -126,18 +111,12 @@ class ConversationRoutesTest {
 
     @Test
     fun `POST conversations without internal key returns 403`() {
-        val registry = mockk<ConversationRegistry>(relaxed = true)
-
-        testApplication {
-            application {
-                install(Koin) { modules(module { single { registry } }) }
-                configureSerialization()
-                configureConversationRoutes(TEST_INTERNAL_KEY)
-            }
-            val response = client.post("/conversations") {
-                contentType(ContentType.Application.Json)
-                setBody("""{"conversationId":"conv-1","memberIds":[]}""")
-            }
+        withConversationApp {
+            val response =
+                client.post("/conversations") {
+                    contentType(ContentType.Application.Json)
+                    setBody("""{"conversationId":"conv-1","memberIds":[]}""")
+                }
             assertEquals(HttpStatusCode.Forbidden, response.status)
         }
     }

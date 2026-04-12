@@ -11,7 +11,12 @@ fun Application.configureCors() {
     val allowedOrigins = rawOrigins.split(",").map { it.trim() }.filter { it.isNotEmpty() }
 
     install(CORS) {
-        allowedOrigins.forEach { allowHost(it.removePrefix("http://").removePrefix("https://"), schemes = listOf(it.substringBefore("://"))) }
+        allowedOrigins.forEach {
+            allowHost(
+                it.removePrefix("http://").removePrefix("https://"),
+                schemes = listOf(it.substringBefore("://")),
+            )
+        }
         allowHeader(HttpHeaders.Authorization)
         allowHeader(HttpHeaders.ContentType)
         allowMethod(HttpMethod.Get)
