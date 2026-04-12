@@ -55,6 +55,13 @@ module "ecs" {
   dynamodb_table_arns  = module.dynamodb.table_arns
 }
 
+module "static_site" {
+  source                  = "./modules/static_site"
+  project_name            = var.project_name
+  alb_dns_name            = module.alb.public_alb_dns_name
+  chatserver_nlb_dns_name = module.alb.chatserver_nlb_dns_name
+}
+
 module "ecs_services" {
   source                   = "./modules/ecs_services"
   project_name             = var.project_name
@@ -76,4 +83,5 @@ module "ecs_services" {
   apiserver_log_group      = module.ecs.apiserver_log_group
   chatserver_log_group     = module.ecs.chatserver_log_group
   presenceserver_log_group = module.ecs.presenceserver_log_group
+  cloudfront_domain        = module.static_site.cloudfront_domain
 }

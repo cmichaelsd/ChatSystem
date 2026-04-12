@@ -73,3 +73,8 @@ variable "chatserver_log_group" {
 variable "presenceserver_log_group" {
   type = string
 }
+
+variable "cloudfront_domain" {
+  type        = string
+  description = "CloudFront domain used as CORS allowed origin for ApiServer and ChatServer"
+}
