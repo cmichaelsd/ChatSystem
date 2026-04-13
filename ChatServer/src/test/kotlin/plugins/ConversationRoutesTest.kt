@@ -29,9 +29,11 @@ class ConversationRoutesTest {
         testApplication {
             application {
                 install(Koin) {
-                    modules(module {
-                        single { registry }
-                    })
+                    modules(
+                        module {
+                            single { registry }
+                        },
+                    )
                 }
                 configureSerialization()
                 configureConversationRoutes(TEST_INTERNAL_KEY)
