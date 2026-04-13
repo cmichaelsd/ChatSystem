@@ -5,7 +5,7 @@ on:
   pull_request:
 
 jobs:
-  terraform-formet:
+  terraform-format:
     name: Terraform Format
     runs-on: ubuntu-latest
 
