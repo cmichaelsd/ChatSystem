@@ -43,7 +43,7 @@ jobs:
         with:
           python-version: "3.14"
           cache: pip
-          cache-dependency-path: ApiServer/requirements.txt
+          cache-dependency-path: ApiServer/requirements-dev.txt
 
       - name: Install dependencies
         working-directory: ApiServer
@@ -64,7 +64,7 @@ jobs:
         with:
           python-version: "3.14"
           cache: pip
-          cache-dependency-path: PresenceServer/requirements.txt
+          cache-dependency-path: PresenceServer/requirements-dev.txt
 
       - name: Install dependencies
         working-directory: PresenceServer
