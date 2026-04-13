@@ -20,13 +20,13 @@ resource "aws_ecs_task_definition" "apiserver" {
 
     environment = [
       { name = "CHAT_SERVER_URL", value = "http://${var.chatserver_nlb_dns_name}" },
-      { name = "CORS_ORIGINS",    value = "https://${var.cloudfront_domain}" },
+      { name = "CORS_ORIGINS", value = "https://${var.cloudfront_domain}" },
     ]
 
     secrets = [
-      { name = "DATABASE_URL",        valueFrom = "${var.db_secret_arn}:database_url::" },
-      { name = "SECRET_KEY",          valueFrom = var.jwt_secret_arn },
-      { name = "INTERNAL_API_KEY",    valueFrom = var.internal_api_key_arn },
+      { name = "DATABASE_URL", valueFrom = "${var.db_secret_arn}:database_url::" },
+      { name = "SECRET_KEY", valueFrom = var.jwt_secret_arn },
+      { name = "INTERNAL_API_KEY", valueFrom = var.internal_api_key_arn },
     ]
 
     logConfiguration = {
@@ -84,7 +84,7 @@ resource "aws_ecs_task_definition" "presenceserver" {
     ]
 
     secrets = [
-      { name = "SECRET_KEY",       valueFrom = var.jwt_secret_arn },
+      { name = "SECRET_KEY", valueFrom = var.jwt_secret_arn },
       { name = "INTERNAL_API_KEY", valueFrom = var.internal_api_key_arn },
     ]
 
@@ -141,11 +141,11 @@ resource "aws_ecs_task_definition" "chatserver" {
 
     environment = [
       { name = "PRESENCE_SERVER_URL", value = "http://${var.internal_alb_dns_name}" },
-      { name = "CORS_ORIGINS",        value = "https://${var.cloudfront_domain}" },
+      { name = "CORS_ORIGINS", value = "https://${var.cloudfront_domain}" },
     ]
 
     secrets = [
-      { name = "JWT_SECRET",       valueFrom = var.jwt_secret_arn },
+      { name = "JWT_SECRET", valueFrom = var.jwt_secret_arn },
       { name = "INTERNAL_API_KEY", valueFrom = var.internal_api_key_arn },
     ]
 

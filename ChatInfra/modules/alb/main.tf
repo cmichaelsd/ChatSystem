@@ -80,12 +80,12 @@ resource "aws_lb" "chatserver_nlb" {
 }
 
 resource "aws_lb_target_group" "chatserver" {
-  name                 = "${var.project_name}-chatserver"
-  port                 = 8080
-  protocol             = "TCP"
-  vpc_id               = var.vpc_id
-  target_type          = "ip"
-  preserve_client_ip   = false
+  name               = "${var.project_name}-chatserver"
+  port               = 8080
+  protocol           = "TCP"
+  vpc_id             = var.vpc_id
+  target_type        = "ip"
+  preserve_client_ip = false
 
   health_check {
     protocol            = "HTTP"
