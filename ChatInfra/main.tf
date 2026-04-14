@@ -10,11 +10,13 @@ module "security_groups" {
 }
 
 module "alb" {
-  source            = "./modules/alb"
-  project_name      = var.project_name
-  vpc_id            = module.vpc.vpc_id
-  alb_sg_id         = module.security_groups.alb_sg_id
-  public_subnet_ids = module.vpc.public_subnets
+  source             = "./modules/alb"
+  project_name       = var.project_name
+  vpc_id             = module.vpc.vpc_id
+  alb_sg_id          = module.security_groups.alb_sg_id
+  internal_alb_sg_id = module.security_groups.internal_alb_sg_id
+  public_subnet_ids  = module.vpc.public_subnets
+  private_subnet_ids = module.vpc.private_subnets
 }
 
 module "dynamodb" {
@@ -49,6 +51,7 @@ module "ecs" {
   source               = "./modules/ecs"
   project_name         = var.project_name
   region               = var.aws_region
+  aws_account_id       = var.aws_account_id
   db_secret_arn        = module.secrets.db_secret_arn
   jwt_secret_arn       = module.secrets.jwt_secret_arn
   internal_api_key_arn = module.secrets.internal_api_key_arn
@@ -63,25 +66,28 @@ module "static_site" {
 }
 
 module "ecs_services" {
-  source                   = "./modules/ecs_services"
-  project_name             = var.project_name
-  region                   = var.aws_region
-  cluster_id               = module.ecs.cluster_id
-  execution_role_arn       = module.ecs.execution_role_arn
-  chatserver_task_role_arn = module.ecs.chatserver_task_role_arn
-  private_subnet_ids       = module.vpc.private_subnets
-  ecs_tasks_sg_id          = module.security_groups.ecs_tasks_sg_id
-  chatserver_nlb_dns_name  = module.alb.chatserver_nlb_dns_name
-  internal_alb_dns_name    = module.alb.internal_alb_dns_name
-  apiserver_tg_arn         = module.alb.apiserver_tg_arn
-  presenceserver_tg_arn    = module.alb.presenceserver_tg_arn
-  chatserver_tg_arn        = module.alb.chatserver_tg_arn
-  db_secret_arn            = module.secrets.db_secret_arn
-  jwt_secret_arn           = module.secrets.jwt_secret_arn
-  internal_api_key_arn     = module.secrets.internal_api_key_arn
-  redis_address            = module.elasticache.redis_address
-  apiserver_log_group      = module.ecs.apiserver_log_group
-  chatserver_log_group     = module.ecs.chatserver_log_group
-  presenceserver_log_group = module.ecs.presenceserver_log_group
-  cloudfront_domain        = module.static_site.cloudfront_domain
+  source                            = "./modules/ecs_services"
+  project_name                      = var.project_name
+  region                            = var.aws_region
+  aws_account_id                    = var.aws_account_id
+  cluster_id                        = module.ecs.cluster_id
+  execution_role_api_arn            = module.ecs.execution_role_api_arn
+  execution_role_chatserver_arn     = module.ecs.execution_role_chatserver_arn
+  execution_role_presenceserver_arn = module.ecs.execution_role_presenceserver_arn
+  chatserver_task_role_arn          = module.ecs.chatserver_task_role_arn
+  private_subnet_ids                = module.vpc.private_subnets
+  ecs_tasks_sg_id                   = module.security_groups.ecs_tasks_sg_id
+  chatserver_nlb_dns_name           = module.alb.chatserver_nlb_dns_name
+  internal_alb_dns_name             = module.alb.internal_alb_dns_name
+  apiserver_tg_arn                  = module.alb.apiserver_tg_arn
+  presenceserver_tg_arn             = module.alb.presenceserver_tg_arn
+  chatserver_tg_arn                 = module.alb.chatserver_tg_arn
+  db_secret_arn                     = module.secrets.db_secret_arn
+  jwt_secret_arn                    = module.secrets.jwt_secret_arn
+  internal_api_key_arn              = module.secrets.internal_api_key_arn
+  redis_address                     = module.elasticache.redis_address
+  apiserver_log_group               = module.ecs.apiserver_log_group
+  chatserver_log_group              = module.ecs.chatserver_log_group
+  presenceserver_log_group          = module.ecs.presenceserver_log_group
+  cloudfront_domain                 = module.static_site.cloudfront_domain
 }

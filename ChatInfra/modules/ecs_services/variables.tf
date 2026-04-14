@@ -6,11 +6,23 @@ variable "region" {
   type = string
 }
 
+variable "aws_account_id" {
+  type = string
+}
+
 variable "cluster_id" {
   type = string
 }
 
-variable "execution_role_arn" {
+variable "execution_role_api_arn" {
+  type = string
+}
+
+variable "execution_role_chatserver_arn" {
+  type = string
+}
+
+variable "execution_role_presenceserver_arn" {
   type = string
 }
 

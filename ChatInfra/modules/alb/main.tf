@@ -40,8 +40,8 @@ resource "aws_lb" "internal_alb" {
   name               = "${var.project_name}-internal-alb"
   internal           = true
   load_balancer_type = "application"
-  security_groups    = [var.alb_sg_id]
-  subnets            = var.public_subnet_ids
+  security_groups    = [var.internal_alb_sg_id]
+  subnets            = var.private_subnet_ids
 }
 
 resource "aws_lb_target_group" "presenceserver" {

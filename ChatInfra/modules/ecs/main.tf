@@ -19,8 +19,8 @@ resource "aws_cloudwatch_log_group" "presenceserver" {
 
 # --- Execution role (used by ECS agent to pull images and inject secrets) ---
 
-resource "aws_iam_role" "ecs_execution" {
-  name = "${var.project_name}-ecs-execution"
+resource "aws_iam_role" "ecs_execution_api" {
+  name = "${var.project_name}-ecs-execution-api"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -28,18 +28,79 @@ resource "aws_iam_role" "ecs_execution" {
       Effect    = "Allow"
       Principal = { Service = "ecs-tasks.amazonaws.com" }
       Action    = "sts:AssumeRole"
+      Condition = {
+        ArnLike = {
+          "aws:SourceArn" = "arn:aws:ecs:${var.region}:${var.aws_account_id}:*"
+        }
+        StringEquals = {
+          "aws:SourceAccount" = var.aws_account_id
+        }
+      }
     }]
   })
 }
 
-resource "aws_iam_role_policy_attachment" "ecs_execution_policy" {
-  role       = aws_iam_role.ecs_execution.name
+resource "aws_iam_role" "ecs_execution_chatserver" {
+  name = "${var.project_name}-ecs-execution-chatserver"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "ecs-tasks.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+      Condition = {
+        ArnLike = {
+          "aws:SourceArn" = "arn:aws:ecs:${var.region}:${var.aws_account_id}:*"
+        }
+        StringEquals = {
+          "aws:SourceAccount" = var.aws_account_id
+        }
+      }
+    }]
+  })
+}
+
+resource "aws_iam_role" "ecs_execution_presenceserver" {
+  name = "${var.project_name}-ecs-execution-presenceserver"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "ecs-tasks.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+      Condition = {
+        ArnLike = {
+          "aws:SourceArn" = "arn:aws:ecs:${var.region}:${var.aws_account_id}:*"
+        }
+        StringEquals = {
+          "aws:SourceAccount" = var.aws_account_id
+        }
+      }
+    }]
+  })
+}
+
+
+resource "aws_iam_role_policy_attachment" "ecs_execution_policy_api" {
+  role       = aws_iam_role.ecs_execution_api.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
-resource "aws_iam_role_policy" "ecs_execution_secrets" {
-  name = "${var.project_name}-ecs-secrets"
-  role = aws_iam_role.ecs_execution.id
+resource "aws_iam_role_policy_attachment" "ecs_execution_policy_chatserver" {
+  role       = aws_iam_role.ecs_execution_chatserver.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_execution_policy_presenceserver" {
+  role       = aws_iam_role.ecs_execution_presenceserver.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+resource "aws_iam_role_policy" "ecs_execution_secrets_api" {
+  name = "${var.project_name}-ecs-secrets-api"
+  role = aws_iam_role.ecs_execution_api.id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -48,6 +109,40 @@ resource "aws_iam_role_policy" "ecs_execution_secrets" {
       Action = ["secretsmanager:GetSecretValue"]
       Resource = [
         var.db_secret_arn,
+        var.jwt_secret_arn,
+        var.internal_api_key_arn,
+      ]
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "ecs_execution_secrets_chatserver" {
+  name = "${var.project_name}-ecs-secrets-chatserver"
+  role = aws_iam_role.ecs_execution_chatserver.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = ["secretsmanager:GetSecretValue"]
+      Resource = [
+        var.jwt_secret_arn,
+        var.internal_api_key_arn,
+      ]
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "ecs_execution_secrets_presenceserver" {
+  name = "${var.project_name}-ecs-secrets-presenceserver"
+  role = aws_iam_role.ecs_execution_presenceserver.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = ["secretsmanager:GetSecretValue"]
+      Resource = [
         var.jwt_secret_arn,
         var.internal_api_key_arn,
       ]
@@ -66,6 +161,14 @@ resource "aws_iam_role" "chatserver_task" {
       Effect    = "Allow"
       Principal = { Service = "ecs-tasks.amazonaws.com" }
       Action    = "sts:AssumeRole"
+      Condition = {
+        ArnLike = {
+          "aws:SourceArn" = "arn:aws:ecs:${var.region}:${var.aws_account_id}:*"
+        }
+        StringEquals = {
+          "aws:SourceAccount" = var.aws_account_id
+        }
+      }
     }]
   })
 }
@@ -84,8 +187,6 @@ resource "aws_iam_role_policy" "chatserver_dynamodb" {
         "dynamodb:DeleteItem",
         "dynamodb:UpdateItem",
         "dynamodb:Query",
-        "dynamodb:DescribeTable",
-        "dynamodb:CreateTable",
       ]
       Resource = var.dynamodb_table_arns
     }]
@@ -101,14 +202,13 @@ resource "aws_iam_role_policy" "chatserver_sqs" {
     Statement = [{
       Effect = "Allow"
       Action = [
-        "sqs:CreateQueue",
         "sqs:SendMessage",
         "sqs:ReceiveMessage",
         "sqs:DeleteMessage",
         "sqs:GetQueueUrl",
         "sqs:GetQueueAttributes",
       ]
-      Resource = "arn:aws:sqs:${var.region}:657083456388:chat-server-*"
+      Resource = "arn:aws:sqs:${var.region}:${var.aws_account_id}:chat-server-*"
     }]
   })
 }

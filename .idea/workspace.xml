@@ -1,7 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="34b1aec0-cf89-4672-82a0-84670729e71f" name="Changes" comment="" />
+    <list default="true" id="34b1aec0-cf89-4672-82a0-84670729e71f" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatInfra/main.tf" beforeDir="false" afterPath="$PROJECT_DIR$/ChatInfra/main.tf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatInfra/modules/alb/main.tf" beforeDir="false" afterPath="$PROJECT_DIR$/ChatInfra/modules/alb/main.tf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatInfra/modules/alb/variables.tf" beforeDir="false" afterPath="$PROJECT_DIR$/ChatInfra/modules/alb/variables.tf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatInfra/modules/ecs/main.tf" beforeDir="false" afterPath="$PROJECT_DIR$/ChatInfra/modules/ecs/main.tf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatInfra/modules/ecs/outputs.tf" beforeDir="false" afterPath="$PROJECT_DIR$/ChatInfra/modules/ecs/outputs.tf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatInfra/modules/ecs/variables.tf" beforeDir="false" afterPath="$PROJECT_DIR$/ChatInfra/modules/ecs/variables.tf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatInfra/modules/ecs_services/main.tf" beforeDir="false" afterPath="$PROJECT_DIR$/ChatInfra/modules/ecs_services/main.tf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatInfra/modules/ecs_services/variables.tf" beforeDir="false" afterPath="$PROJECT_DIR$/ChatInfra/modules/ecs_services/variables.tf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatInfra/modules/security_groups/main.tf" beforeDir="false" afterPath="$PROJECT_DIR$/ChatInfra/modules/security_groups/main.tf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatInfra/modules/security_groups/outputs.tf" beforeDir="false" afterPath="$PROJECT_DIR$/ChatInfra/modules/security_groups/outputs.tf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatInfra/terraform.tfvars" beforeDir="false" afterPath="$PROJECT_DIR$/ChatInfra/terraform.tfvars" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatInfra/variables.tf" beforeDir="false" afterPath="$PROJECT_DIR$/ChatInfra/variables.tf" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -18,17 +32,78 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "master",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "/home/cole/Projects/ChatSystem"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Gradle./home/cole/Projects/ChatSystem/ChatServer [ktlintFormat].executor&quot;: &quot;Run&quot;,
+    &quot;Gradle./home/cole/Projects/ChatSystem/ChatServer [test clean].executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/cole/Projects/WebScraper&quot;
   }
-}]]></component>
+}</component>
+  <component name="RunManager" selected="Gradle./home/cole/Projects/ChatSystem/ChatServer [test clean]">
+    <configuration name="/home/cole/Projects/ChatSystem/ChatServer [ktlintFormat]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$/ChatServer" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" value="" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value="ktlintFormat" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <ExternalSystemDebugDisabled>false</ExternalSystemDebugDisabled>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <RunAsTest>false</RunAsTest>
+      <GradleProfilingDisabled>false</GradleProfilingDisabled>
+      <GradleCoverageDisabled>false</GradleCoverageDisabled>
+      <method v="2" />
+    </configuration>
+    <configuration name="/home/cole/Projects/ChatSystem/ChatServer [test clean]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$/ChatServer" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" value="" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value="test" />
+            <option value="clean" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <ExternalSystemDebugDisabled>false</ExternalSystemDebugDisabled>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <RunAsTest>false</RunAsTest>
+      <GradleProfilingDisabled>false</GradleProfilingDisabled>
+      <GradleCoverageDisabled>false</GradleCoverageDisabled>
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Gradle./home/cole/Projects/ChatSystem/ChatServer [test clean]" />
+        <item itemvalue="Gradle./home/cole/Projects/ChatSystem/ChatServer [ktlintFormat]" />
+      </list>
+    </recent_temporary>
+  </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="34b1aec0-cf89-4672-82a0-84670729e71f" name="Changes" comment="" />

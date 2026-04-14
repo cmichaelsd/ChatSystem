@@ -6,11 +6,11 @@ resource "aws_ecs_task_definition" "apiserver" {
   network_mode             = "awsvpc"
   cpu                      = 256
   memory                   = 512
-  execution_role_arn       = var.execution_role_arn
+  execution_role_arn       = var.execution_role_api_arn
 
   container_definitions = jsonencode([{
     name      = "apiserver"
-    image     = "657083456388.dkr.ecr.${var.region}.amazonaws.com/chatsystem/apiserver:latest"
+    image     = "${var.aws_account_id}.dkr.ecr.${var.region}.amazonaws.com/chatsystem/apiserver:latest"
     essential = true
 
     portMappings = [{
@@ -41,11 +41,12 @@ resource "aws_ecs_task_definition" "apiserver" {
 }
 
 resource "aws_ecs_service" "apiserver" {
-  name            = "${var.project_name}-apiserver"
-  cluster         = var.cluster_id
-  task_definition = aws_ecs_task_definition.apiserver.arn
-  desired_count   = 1
-  launch_type     = "FARGATE"
+  name                              = "${var.project_name}-apiserver"
+  cluster                           = var.cluster_id
+  task_definition                   = aws_ecs_task_definition.apiserver.arn
+  desired_count                     = 1
+  launch_type                       = "FARGATE"
+  health_check_grace_period_seconds = 60
 
   network_configuration {
     subnets         = var.private_subnet_ids
@@ -67,11 +68,11 @@ resource "aws_ecs_task_definition" "presenceserver" {
   network_mode             = "awsvpc"
   cpu                      = 256
   memory                   = 512
-  execution_role_arn       = var.execution_role_arn
+  execution_role_arn       = var.execution_role_presenceserver_arn
 
   container_definitions = jsonencode([{
     name      = "presenceserver"
-    image     = "657083456388.dkr.ecr.${var.region}.amazonaws.com/chatsystem/presenceserver:latest"
+    image     = "${var.aws_account_id}.dkr.ecr.${var.region}.amazonaws.com/chatsystem/presenceserver:latest"
     essential = true
 
     portMappings = [{
@@ -100,11 +101,12 @@ resource "aws_ecs_task_definition" "presenceserver" {
 }
 
 resource "aws_ecs_service" "presenceserver" {
-  name            = "${var.project_name}-presenceserver"
-  cluster         = var.cluster_id
-  task_definition = aws_ecs_task_definition.presenceserver.arn
-  desired_count   = 1
-  launch_type     = "FARGATE"
+  name                              = "${var.project_name}-presenceserver"
+  cluster                           = var.cluster_id
+  task_definition                   = aws_ecs_task_definition.presenceserver.arn
+  desired_count                     = 1
+  launch_type                       = "FARGATE"
+  health_check_grace_period_seconds = 60
 
   network_configuration {
     subnets         = var.private_subnet_ids
@@ -126,12 +128,12 @@ resource "aws_ecs_task_definition" "chatserver" {
   network_mode             = "awsvpc"
   cpu                      = 512
   memory                   = 1024
-  execution_role_arn       = var.execution_role_arn
+  execution_role_arn       = var.execution_role_chatserver_arn
   task_role_arn            = var.chatserver_task_role_arn
 
   container_definitions = jsonencode([{
     name      = "chatserver"
-    image     = "657083456388.dkr.ecr.${var.region}.amazonaws.com/chatsystem/chatserver:latest"
+    image     = "${var.aws_account_id}.dkr.ecr.${var.region}.amazonaws.com/chatsystem/chatserver:latest"
     essential = true
 
     portMappings = [{
@@ -161,11 +163,12 @@ resource "aws_ecs_task_definition" "chatserver" {
 }
 
 resource "aws_ecs_service" "chatserver" {
-  name            = "${var.project_name}-chatserver"
-  cluster         = var.cluster_id
-  task_definition = aws_ecs_task_definition.chatserver.arn
-  desired_count   = 2
-  launch_type     = "FARGATE"
+  name                              = "${var.project_name}-chatserver"
+  cluster                           = var.cluster_id
+  task_definition                   = aws_ecs_task_definition.chatserver.arn
+  desired_count                     = 2
+  launch_type                       = "FARGATE"
+  health_check_grace_period_seconds = 60
 
   network_configuration {
     subnets         = var.private_subnet_ids

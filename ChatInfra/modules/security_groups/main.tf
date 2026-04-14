@@ -47,12 +47,20 @@ resource "aws_security_group" "ecs_tasks" {
   description = "Allow inbound from load balancers and outbound to anywhere"
   vpc_id      = var.vpc_id
 
-  # ApiServer and PresenceServer — from ALB
+  # ApiServer — from public ALB
   ingress {
     from_port       = 8000
     to_port         = 8000
     protocol        = "tcp"
     security_groups = [aws_security_group.alb.id]
+  }
+
+  # PresenceServer — from internal ALB
+  ingress {
+    from_port       = 8000
+    to_port         = 8000
+    protocol        = "tcp"
+    security_groups = [aws_security_group.internal_alb.id]
   }
 
   # ChatServer WebSocket — NLBs are Layer 4 and don't have SGs,
@@ -76,19 +84,12 @@ resource "aws_security_group" "ecs_tasks" {
 
 resource "aws_security_group" "alb" {
   name        = "${var.project_name}-alb-sg"
-  description = "Allow HTTP/HTTPS from internet to ALB"
+  description = "Allow HTTP from internet to public ALB"
   vpc_id      = var.vpc_id
 
   ingress {
     from_port   = 80
     to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 443
-    to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -101,4 +102,26 @@ resource "aws_security_group" "alb" {
   }
 
   tags = { Name = "${var.project_name}-alb-sg" }
+}
+
+resource "aws_security_group" "internal_alb" {
+  name        = "${var.project_name}-internal-alb-sg"
+  description = "Allow HTTP from ECS tasks to internal ALB only"
+  vpc_id      = var.vpc_id
+
+  ingress {
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    security_groups = [aws_security_group.ecs_tasks.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = { Name = "${var.project_name}-internal-alb-sg" }
 }
