@@ -1,7 +1,7 @@
 package org.chatserver.plugins
 
 import io.ktor.server.application.Application
-import io.ktor.server.application.ApplicationStopped
+import io.ktor.server.application.ApplicationStopping
 import io.ktor.server.application.install
 import org.chatserver.data.registry.ConversationRegistry
 import org.chatserver.data.registry.ServerRegistry
@@ -35,7 +35,7 @@ fun Application.configureDI() {
     val messageRepository by inject<MessageRepository>()
     messageRepository.init()
 
-    environment.monitor.subscribe(ApplicationStopped) {
+    environment.monitor.subscribe(ApplicationStopping) {
         serverRegistry.deregister()
     }
 }

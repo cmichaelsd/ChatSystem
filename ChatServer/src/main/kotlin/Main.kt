@@ -9,7 +9,6 @@ import org.chatserver.plugins.configureDI
 import org.chatserver.plugins.configurePresence
 import org.chatserver.plugins.configureRouting
 import org.chatserver.plugins.configureSerialization
-import org.chatserver.plugins.configureShutdown
 import org.chatserver.plugins.configureSockets
 import org.chatserver.plugins.configureSqs
 
@@ -24,6 +23,5 @@ fun main() {
         configurePresence()
         configureRouting()
         configureConversationRoutes()
-        configureShutdown()
     }.start(wait = true)
 }
