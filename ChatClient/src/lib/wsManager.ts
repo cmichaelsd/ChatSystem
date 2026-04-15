@@ -37,8 +37,8 @@ class WsManager {
         } else if (msg.type === 'presence') {
           usePresenceStore.getState().setUserPresence(msg.userId, msg.online)
         }
-      } catch {
-        // ignore malformed frames
+      } catch (e) {
+        console.error('WS message error:', e)
       }
     }
 

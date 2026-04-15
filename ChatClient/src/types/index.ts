@@ -51,10 +51,3 @@ export interface InboundWsSend {
   content: string
 }
 
-export interface PresenceBatchRequest {
-  user_ids: string[]
-}
-
-export interface PresenceBatchResponse {
-  presence: Record<string, boolean>
-}

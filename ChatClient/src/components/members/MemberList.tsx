@@ -2,7 +2,6 @@ import { useState } from 'react'
 import type { UserResponse } from '../../types'
 import { MemberItem } from './MemberItem'
 import { usePresenceStore } from '../../store/presenceStore'
-import { usePresencePoller } from '../../hooks/usePresencePoller'
 import { searchUsers, addGroupMember } from '../../lib/api'
 
 interface MemberListProps {
@@ -14,8 +13,6 @@ interface MemberListProps {
 
 export function MemberList({ members, groupId, isOwner, onMemberAdded }: MemberListProps) {
   const presence = usePresenceStore((s) => s.presence)
-  const memberIds = members.map((m) => m.id)
-  usePresencePoller(memberIds)
 
   const [adding, setAdding] = useState(false)
   const [input, setInput] = useState('')

@@ -9,7 +9,7 @@ import { Spinner } from '../components/ui/Spinner'
 import { ErrorBanner } from '../components/ui/ErrorBanner'
 import { useWebSocket } from '../hooks/useWebSocket'
 import { useGroupMembers } from '../hooks/useGroupMembers'
-import { getGroups } from '../lib/api'
+import { getGroups, getMe } from '../lib/api'
 import { useAuthStore } from '../store/authStore'
 import { useGroupStore } from '../store/groupStore'
 import { wsManager } from '../lib/wsManager'
@@ -17,6 +17,7 @@ import { wsManager } from '../lib/wsManager'
 export function ChatPage() {
   const token = useAuthStore((s) => s.token)
   const currentUser = useAuthStore((s) => s.currentUser)
+  const setCurrentUser = useAuthStore((s) => s.setCurrentUser)
   const logout = useAuthStore((s) => s.logout)
 
   const groups = useGroupStore((s) => s.groups)
@@ -33,6 +34,12 @@ export function ChatPage() {
   useWebSocket(token)
 
   const { members } = useGroupMembers(activeGroupId, memberRefreshKey)
+
+  useEffect(() => {
+    if (!currentUser) {
+      getMe().then(setCurrentUser).catch(() => {})
+    }
+  }, [])
 
   useEffect(() => {
     setLoadingGroups(true)

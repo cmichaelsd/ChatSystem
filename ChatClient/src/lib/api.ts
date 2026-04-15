@@ -4,7 +4,6 @@ import type {
   UserResponse,
   GroupResponse,
   StoredMessage,
-  PresenceBatchResponse,
 } from '../types'
 
 function getToken(): string | null {
@@ -113,15 +112,5 @@ export async function addGroupMember(groupId: string, userId: string): Promise<v
 export async function getMessages(conversationId: string): Promise<StoredMessage[]> {
   const res = await authedFetch(`${API_BASE}/conversations/${conversationId}/messages`)
   if (!res.ok) throw new Error('Failed to fetch messages')
-  return res.json()
-}
-
-export async function batchPresence(userIds: string[]): Promise<PresenceBatchResponse> {
-  const res = await authedFetch(`${API_BASE}/presence/batch`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ user_ids: userIds }),
-  })
-  if (!res.ok) throw new Error('Failed to fetch presence')
   return res.json()
 }
