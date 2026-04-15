@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
 from app.database import Base, engine
-from app.routers import auth, users, groups, conversations, presence
+from app.routers import auth, users, groups, conversations
 from app.config import settings
 import app.models.user  # noqa: F401
 import app.models.group  # noqa: F401
@@ -60,7 +60,6 @@ app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(groups.router)
 app.include_router(conversations.router)
-app.include_router(presence.router)
 
 
 @app.get("/health")
