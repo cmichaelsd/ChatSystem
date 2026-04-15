@@ -49,6 +49,15 @@ fun Application.configureSockets() {
                 logger.info("User $userId connected")
                 userRegistry.register(userId)
                 sessionStore.add(userId, this)
+
+                // Immediately send the connecting user their own presence and a snapshot
+                // of everyone already online on this server — no SQS round-trip needed.
+                val alreadyOnline = sessionStore.getAll()
+                for (onlineUserId in alreadyOnline) {
+                    send(Frame.Text(Json.encodeToString(PresenceEvent(userId = onlineUserId, online = true))))
+                }
+
+                // Notify all other servers that this user came online.
                 broadcastPresence(userId, online = true, serverRegistry, sqsClient)
 
                 val pending = pendingMessageRepository.fetchAndClear(userId)
