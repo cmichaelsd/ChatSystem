@@ -34,6 +34,7 @@ Presence queries from clients are proxied through ChatServer.
 2) `docker build -t chatsystem-presenceserver .`
 3) `docker tag chatsystem-presenceserver:latest 657083456388.dkr.ecr.us-west-1.amazonaws.com/chatsystem/presenceserver:latest`
 4) `docker push 657083456388.dkr.ecr.us-west-1.amazonaws.com/chatsystem/presenceserver:latest`
+5) For image update in ECS (if needed): `aws ecs update-service --cluster chatsystem --service chatsystem-presenceserver --force-new-deployment`
 
 
 ## If packages are altered

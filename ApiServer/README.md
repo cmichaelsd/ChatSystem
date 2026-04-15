@@ -44,6 +44,7 @@ Additionally, there are S2S calls, API Server will contact Chat Server to update
 2) `docker build -t chatsystem-apiserver .`
 3) `docker tag chatsystem-apiserver:latest 657083456388.dkr.ecr.us-west-1.amazonaws.com/chatsystem/apiserver:latest`
 4) `docker push 657083456388.dkr.ecr.us-west-1.amazonaws.com/chatsystem/apiserver:latest`
+5) For image update in ECS (if needed): `aws ecs update-service --cluster chatsystem --service chatsystem-apiserver --force-new-deployment`
 
 
 ## If packages are altered

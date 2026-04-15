@@ -98,6 +98,7 @@ Message history is persisted to DynamoDB on every send and can be fetched via th
 2) `docker build -t chatsystem-chatserver .`
 3) `docker tag chatsystem-chatserver:latest 657083456388.dkr.ecr.us-west-1.amazonaws.com/chatsystem/chatserver:latest`
 4) `docker push 657083456388.dkr.ecr.us-west-1.amazonaws.com/chatsystem/chatserver:latest`
+5) For image update in ECS (if needed): `aws ecs update-service --cluster chatsystem --service chatsystem-chatserver --force-new-deployment`
 
 
 ## How to test
