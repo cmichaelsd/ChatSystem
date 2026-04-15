@@ -31,11 +31,20 @@ export interface StoredMessage {
 }
 
 export interface OutboundWsMessage {
+  type: 'chat'
   fromUserId: string
   toUserId: string
   conversationId: string
   content: string
 }
+
+export interface WsPresenceEvent {
+  type: 'presence'
+  userId: string
+  online: boolean
+}
+
+export type WsIncomingMessage = OutboundWsMessage | WsPresenceEvent
 
 export interface InboundWsSend {
   conversationId: string

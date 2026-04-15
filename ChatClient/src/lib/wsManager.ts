@@ -1,6 +1,7 @@
 import { WS_URL, WS_RECONNECT_DELAY_MS } from './constants'
 import { useMessageStore } from '../store/messageStore'
-import type { OutboundWsMessage, InboundWsSend } from '../types'
+import { usePresenceStore } from '../store/presenceStore'
+import type { WsIncomingMessage, InboundWsSend } from '../types'
 
 class WsManager {
   private ws: WebSocket | null = null
@@ -25,13 +26,17 @@ class WsManager {
 
     this.ws.onmessage = (event) => {
       try {
-        const msg: OutboundWsMessage = JSON.parse(event.data)
-        useMessageStore.getState().appendMessage(msg.conversationId, {
-          fromUserId: msg.fromUserId,
-          conversationId: msg.conversationId,
-          content: msg.content,
-          sentAt: new Date().toISOString(),
-        })
+        const msg: WsIncomingMessage = JSON.parse(event.data)
+        if (msg.type === 'chat') {
+          useMessageStore.getState().appendMessage(msg.conversationId, {
+            fromUserId: msg.fromUserId,
+            conversationId: msg.conversationId,
+            content: msg.content,
+            sentAt: new Date().toISOString(),
+          })
+        } else if (msg.type === 'presence') {
+          usePresenceStore.getState().setUserPresence(msg.userId, msg.online)
+        }
       } catch {
         // ignore malformed frames
       }
