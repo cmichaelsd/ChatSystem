@@ -47,7 +47,7 @@ class ChatMessageSerializationTest {
 
     @Test
     fun `ChatMessage JSON contains all expected fields`() {
-        val message = ChatMessage("alice", "bob", "conv-1", "hello")
+        val message = ChatMessage(fromUserId = "alice", toUserId = "bob", conversationId = "conv-1", content = "hello")
         val json = Json.encodeToString(message)
         assert(json.contains("\"fromUserId\":\"alice\""))
         assert(json.contains("\"toUserId\":\"bob\""))

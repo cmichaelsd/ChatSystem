@@ -15,6 +15,8 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.chatserver.data.repository.PendingMessageRepository
 import org.chatserver.models.ChatMessage
+import org.chatserver.models.PresenceEvent
+import org.chatserver.models.SqsEnvelope
 import org.chatserver.session.SessionStore
 import software.amazon.awssdk.services.sqs.SqsClient
 import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest
@@ -30,8 +32,9 @@ class SqsConsumerTest {
     private val pendingMessageRepository = mockk<PendingMessageRepository>(relaxed = true)
     private val consumer = SqsConsumer(sqsClient, sessionStore, pendingMessageRepository)
 
-    private val chatMessage = ChatMessage("alice", "bob", "conv-1", "hello")
-    private val messageJson = Json.encodeToString(chatMessage)
+    private val chatMessage = ChatMessage(fromUserId = "alice", toUserId = "bob", conversationId = "conv-1", content = "hello")
+    private val chatMessageJson = Json.encodeToString(chatMessage)
+    private val chatEnvelopeJson = Json.encodeToString(SqsEnvelope(SqsEnvelope.CHAT, chatMessageJson))
 
     /** Stubs receiveMessage to return [response] once, then throw CancellationException to stop the loop. */
     private fun stubReceiveOnce(response: ReceiveMessageResponse) {
@@ -54,7 +57,7 @@ class SqsConsumerTest {
 
             stubReceiveOnce(
                 ReceiveMessageResponse.builder()
-                    .messages(buildSqsMessage(messageJson))
+                    .messages(buildSqsMessage(chatEnvelopeJson))
                     .build(),
             )
             every { sessionStore.get("bob") } returns session
@@ -62,7 +65,7 @@ class SqsConsumerTest {
             val job = launch { consumer.start("https://sqs/queue") }
             job.join()
 
-            coVerify { session.send(match { it is Frame.Text && (it as Frame.Text).readText() == messageJson }) }
+            coVerify { session.send(match { it is Frame.Text && (it as Frame.Text).readText() == chatMessageJson }) }
             verify(exactly = 0) { pendingMessageRepository.save(any()) }
         }
 
@@ -71,7 +74,7 @@ class SqsConsumerTest {
         runTest {
             stubReceiveOnce(
                 ReceiveMessageResponse.builder()
-                    .messages(buildSqsMessage(messageJson))
+                    .messages(buildSqsMessage(chatEnvelopeJson))
                     .build(),
             )
             every { sessionStore.get("bob") } returns null
@@ -90,7 +93,7 @@ class SqsConsumerTest {
 
             stubReceiveOnce(
                 ReceiveMessageResponse.builder()
-                    .messages(buildSqsMessage(messageJson, "handle-abc"))
+                    .messages(buildSqsMessage(chatEnvelopeJson, "handle-abc"))
                     .build(),
             )
             every { sessionStore.get("bob") } returns session
@@ -106,7 +109,7 @@ class SqsConsumerTest {
         runTest {
             stubReceiveOnce(
                 ReceiveMessageResponse.builder()
-                    .messages(buildSqsMessage(messageJson))
+                    .messages(buildSqsMessage(chatEnvelopeJson))
                     .build(),
             )
             every { sessionStore.get("bob") } returns null
@@ -120,16 +123,18 @@ class SqsConsumerTest {
     @Test
     fun `processes multiple messages in a single batch`() =
         runTest {
-            val msg1 = ChatMessage("alice", "bob", "conv-1", "hello")
-            val msg2 = ChatMessage("alice", "bob", "conv-1", "world")
+            val msg1 = ChatMessage(fromUserId = "alice", toUserId = "bob", conversationId = "conv-1", content = "hello")
+            val msg2 = ChatMessage(fromUserId = "alice", toUserId = "bob", conversationId = "conv-1", content = "world")
+            val env1 = Json.encodeToString(SqsEnvelope(SqsEnvelope.CHAT, Json.encodeToString(msg1)))
+            val env2 = Json.encodeToString(SqsEnvelope(SqsEnvelope.CHAT, Json.encodeToString(msg2)))
             val session = mockk<DefaultWebSocketServerSession>()
             coEvery { session.send(any<Frame>()) } returns Unit
 
             stubReceiveOnce(
                 ReceiveMessageResponse.builder()
                     .messages(
-                        buildSqsMessage(Json.encodeToString(msg1), "r1"),
-                        buildSqsMessage(Json.encodeToString(msg2), "r2"),
+                        buildSqsMessage(env1, "r1"),
+                        buildSqsMessage(env2, "r2"),
                     )
                     .build(),
             )
@@ -155,5 +160,34 @@ class SqsConsumerTest {
             verify(exactly = 0) { sessionStore.get(any()) }
             verify(exactly = 0) { pendingMessageRepository.save(any()) }
             verify(exactly = 0) { sqsClient.deleteMessage(any<Consumer<DeleteMessageRequest.Builder>>()) }
+        }
+
+    @Test
+    fun `presence event is broadcast to all connected sessions`() =
+        runTest {
+            val session1 = mockk<DefaultWebSocketServerSession>()
+            val session2 = mockk<DefaultWebSocketServerSession>()
+            coEvery { session1.send(any<Frame>()) } returns Unit
+            coEvery { session2.send(any<Frame>()) } returns Unit
+
+            val presenceEvent = PresenceEvent(userId = "charlie", online = true)
+            val presenceEnvelopeJson =
+                Json.encodeToString(SqsEnvelope(SqsEnvelope.PRESENCE, Json.encodeToString(presenceEvent)))
+
+            stubReceiveOnce(
+                ReceiveMessageResponse.builder()
+                    .messages(buildSqsMessage(presenceEnvelopeJson))
+                    .build(),
+            )
+            every { sessionStore.getAll() } returns setOf("alice", "bob")
+            every { sessionStore.get("alice") } returns session1
+            every { sessionStore.get("bob") } returns session2
+
+            val job = launch { consumer.start("https://sqs/queue") }
+            job.join()
+
+            coVerify(exactly = 1) { session1.send(any<Frame>()) }
+            coVerify(exactly = 1) { session2.send(any<Frame>()) }
+            verify(exactly = 0) { pendingMessageRepository.save(any()) }
         }
 }

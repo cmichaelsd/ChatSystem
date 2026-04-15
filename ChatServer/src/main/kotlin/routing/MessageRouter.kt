@@ -8,6 +8,7 @@ import org.chatserver.data.registry.UserRegistry
 import org.chatserver.data.repository.MessageRepository
 import org.chatserver.data.repository.PendingMessageRepository
 import org.chatserver.models.ChatMessage
+import org.chatserver.models.SqsEnvelope
 import org.slf4j.LoggerFactory
 import software.amazon.awssdk.services.sqs.SqsClient
 
@@ -36,7 +37,7 @@ class MessageRouter(
         messageRepository.save(fromUserId, conversationId, content)
 
         for (recipientId in members) {
-            deliver(ChatMessage(fromUserId, recipientId, conversationId, content))
+            deliver(ChatMessage(fromUserId = fromUserId, toUserId = recipientId, conversationId = conversationId, content = content))
         }
     }
 
@@ -56,9 +57,10 @@ class MessageRouter(
                 return
             }
 
+        val envelope = SqsEnvelope(type = SqsEnvelope.CHAT, payload = Json.encodeToString(message))
         sqsClient.sendMessage {
             it.queueUrl(queueUrl)
-            it.messageBody(Json.encodeToString(message))
+            it.messageBody(Json.encodeToString(envelope))
         }
 
         logger.info("Routed message from ${message.fromUserId} to ${message.toUserId} via $targetServerId")

@@ -64,7 +64,11 @@ class MessageRouterTest {
 
         router.route("alice", "conv-1", "hello")
 
-        verify { pendingMessageRepository.save(ChatMessage("alice", "bob", "conv-1", "hello")) }
+        verify {
+            pendingMessageRepository.save(
+                ChatMessage(fromUserId = "alice", toUserId = "bob", conversationId = "conv-1", content = "hello"),
+            )
+        }
         verify(exactly = 0) { sqsClient.sendMessage(any<Consumer<SendMessageRequest.Builder>>()) }
     }
 
@@ -78,7 +82,11 @@ class MessageRouterTest {
         router.route("alice", "conv-1", "hello")
 
         verify { userRegistry.deregister("bob") }
-        verify { pendingMessageRepository.save(ChatMessage("alice", "bob", "conv-1", "hello")) }
+        verify {
+            pendingMessageRepository.save(
+                ChatMessage(fromUserId = "alice", toUserId = "bob", conversationId = "conv-1", content = "hello"),
+            )
+        }
         verify(exactly = 0) { sqsClient.sendMessage(any<Consumer<SendMessageRequest.Builder>>()) }
     }
 
@@ -117,7 +125,11 @@ class MessageRouterTest {
         router.route("alice", "conv-1", "group message")
 
         verify(exactly = 2) { sqsClient.sendMessage(any<Consumer<SendMessageRequest.Builder>>()) }
-        verify { pendingMessageRepository.save(ChatMessage("alice", "charlie", "conv-1", "group message")) }
+        verify {
+            pendingMessageRepository.save(
+                ChatMessage(fromUserId = "alice", toUserId = "charlie", conversationId = "conv-1", content = "group message"),
+            )
+        }
     }
 
     @Test
@@ -129,8 +141,16 @@ class MessageRouterTest {
 
         router.route("alice", "conv-1", "hello")
 
-        verify { pendingMessageRepository.save(ChatMessage("alice", "bob", "conv-1", "hello")) }
-        verify { pendingMessageRepository.save(ChatMessage("alice", "charlie", "conv-1", "hello")) }
+        verify {
+            pendingMessageRepository.save(
+                ChatMessage(fromUserId = "alice", toUserId = "bob", conversationId = "conv-1", content = "hello"),
+            )
+        }
+        verify {
+            pendingMessageRepository.save(
+                ChatMessage(fromUserId = "alice", toUserId = "charlie", conversationId = "conv-1", content = "hello"),
+            )
+        }
         verify(exactly = 0) { sqsClient.sendMessage(any<Consumer<SendMessageRequest.Builder>>()) }
     }
 }

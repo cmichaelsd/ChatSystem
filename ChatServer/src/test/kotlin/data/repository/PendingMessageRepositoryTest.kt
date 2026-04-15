@@ -45,7 +45,7 @@ class PendingMessageRepositoryTest {
 
     @Test
     fun `save writes pending message to DynamoDB`() {
-        val message = ChatMessage("alice", "bob", "conv-1", "hello")
+        val message = ChatMessage(fromUserId = "alice", toUserId = "bob", conversationId = "conv-1", content = "hello")
         repository.save(message)
 
         verify { dynamoClient.putItem(any<PutItemRequest>()) }
@@ -70,7 +70,7 @@ class PendingMessageRepositoryTest {
         val messages = repository.fetchAndClear("bob")
 
         assertEquals(1, messages.size)
-        assertEquals(ChatMessage("alice", "bob", "conv-1", "hello"), messages[0])
+        assertEquals(ChatMessage(fromUserId = "alice", toUserId = "bob", conversationId = "conv-1", content = "hello"), messages[0])
     }
 
     @Test

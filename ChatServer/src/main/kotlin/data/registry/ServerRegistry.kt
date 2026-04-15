@@ -54,6 +54,15 @@ class ServerRegistry(
         logger.info("Updated queueUrl for server $serverId")
     }
 
+    fun getAllQueueUrls(): List<String> {
+        val response =
+            dynamoClient.scan {
+                it.tableName(tableName)
+                it.projectionExpression("queueUrl")
+            }
+        return response.items().mapNotNull { it["queueUrl"]?.s()?.takeIf { url -> url.isNotEmpty() } }
+    }
+
     fun getQueueUrl(targetServerId: String): String? {
         val response =
             dynamoClient.getItem {

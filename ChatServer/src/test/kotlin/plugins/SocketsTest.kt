@@ -17,6 +17,7 @@ import io.mockk.verify
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.chatserver.data.registry.ServerRegistry
 import org.chatserver.data.registry.UserRegistry
 import org.chatserver.data.repository.PendingMessageRepository
 import org.chatserver.models.ChatMessage
@@ -25,6 +26,7 @@ import org.chatserver.routing.MessageRouter
 import org.chatserver.session.SessionStore
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
+import software.amazon.awssdk.services.sqs.SqsClient
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.time.Duration.Companion.milliseconds
@@ -38,6 +40,8 @@ class SocketsTest {
     private val sessionStore = mockk<SessionStore>(relaxed = true)
     private val messageRouter = mockk<MessageRouter>(relaxed = true)
     private val pendingRepo = mockk<PendingMessageRepository>(relaxed = true)
+    private val serverRegistry = mockk<ServerRegistry>(relaxed = true)
+    private val sqsClient = mockk<SqsClient>(relaxed = true)
 
     private fun withChatApp(block: suspend ApplicationTestBuilder.(client: HttpClient) -> Unit) {
         testApplication {
@@ -49,6 +53,8 @@ class SocketsTest {
                             single { sessionStore }
                             single { messageRouter }
                             single { pendingRepo }
+                            single { serverRegistry }
+                            single { sqsClient }
                         },
                     )
                 }
@@ -75,7 +81,7 @@ class SocketsTest {
 
     @Test
     fun `delivers pending messages on connect`() {
-        val pending = listOf(ChatMessage("bob", "alice", "conv-1", "pending mail"))
+        val pending = listOf(ChatMessage(fromUserId = "bob", toUserId = "alice", conversationId = "conv-1", content = "pending mail"))
         every { pendingRepo.fetchAndClear("alice") } returns pending
 
         val received = mutableListOf<String>()

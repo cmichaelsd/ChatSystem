@@ -13,13 +13,17 @@ import io.ktor.websocket.close
 import io.ktor.websocket.readText
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.chatserver.data.registry.ServerRegistry
 import org.chatserver.data.registry.UserRegistry
 import org.chatserver.data.repository.PendingMessageRepository
 import org.chatserver.models.InboundMessage
+import org.chatserver.models.PresenceEvent
+import org.chatserver.models.SqsEnvelope
 import org.chatserver.routing.MessageRouter
 import org.chatserver.session.SessionStore
 import org.koin.ktor.ext.inject
 import org.slf4j.LoggerFactory
+import software.amazon.awssdk.services.sqs.SqsClient
 
 private val logger = LoggerFactory.getLogger("Sockets")
 
@@ -30,6 +34,8 @@ fun Application.configureSockets() {
     val sessionStore by inject<SessionStore>()
     val messageRouter by inject<MessageRouter>()
     val pendingMessageRepository by inject<PendingMessageRepository>()
+    val serverRegistry by inject<ServerRegistry>()
+    val sqsClient by inject<SqsClient>()
 
     routing {
         authenticate("auth-jwt") {
@@ -43,6 +49,7 @@ fun Application.configureSockets() {
                 logger.info("User $userId connected")
                 userRegistry.register(userId)
                 sessionStore.add(userId, this)
+                broadcastPresence(userId, online = true, serverRegistry, sqsClient)
 
                 val pending = pendingMessageRepository.fetchAndClear(userId)
                 if (pending.isNotEmpty()) {
@@ -64,9 +71,35 @@ fun Application.configureSockets() {
                 } finally {
                     sessionStore.remove(userId)
                     userRegistry.deregister(userId)
+                    broadcastPresence(userId, online = false, serverRegistry, sqsClient)
                     logger.info("User $userId disconnected")
                 }
             }
+        }
+    }
+}
+
+private fun broadcastPresence(
+    userId: String,
+    online: Boolean,
+    serverRegistry: ServerRegistry,
+    sqsClient: SqsClient,
+) {
+    val envelope =
+        Json.encodeToString(
+            SqsEnvelope(
+                type = SqsEnvelope.PRESENCE,
+                payload = Json.encodeToString(PresenceEvent(userId = userId, online = online)),
+            ),
+        )
+    for (queueUrl in serverRegistry.getAllQueueUrls()) {
+        try {
+            sqsClient.sendMessage {
+                it.queueUrl(queueUrl)
+                it.messageBody(envelope)
+            }
+        } catch (e: Exception) {
+            logger.warn("Failed to broadcast presence to $queueUrl: ${e.message}")
         }
     }
 }
