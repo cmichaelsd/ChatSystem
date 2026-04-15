@@ -182,6 +182,7 @@ resource "aws_iam_role_policy" "chatserver_dynamodb" {
     Statement = [{
       Effect = "Allow"
       Action = [
+        "dynamodb:DescribeTable",
         "dynamodb:GetItem",
         "dynamodb:PutItem",
         "dynamodb:DeleteItem",
@@ -202,6 +203,8 @@ resource "aws_iam_role_policy" "chatserver_sqs" {
     Statement = [{
       Effect = "Allow"
       Action = [
+        "sqs:CreateQueue",
+        "sqs:DeleteQueue",
         "sqs:SendMessage",
         "sqs:ReceiveMessage",
         "sqs:DeleteMessage",

@@ -55,14 +55,6 @@ resource "aws_security_group" "ecs_tasks" {
     security_groups = [aws_security_group.alb.id]
   }
 
-  # PresenceServer — from internal ALB
-  ingress {
-    from_port       = 8000
-    to_port         = 8000
-    protocol        = "tcp"
-    security_groups = [aws_security_group.internal_alb.id]
-  }
-
   # ChatServer WebSocket — NLBs are Layer 4 and don't have SGs,
   # so we allow the VPC CIDR (covers NLB nodes and internal callers)
   ingress {
@@ -109,13 +101,6 @@ resource "aws_security_group" "internal_alb" {
   description = "Allow HTTP from ECS tasks to internal ALB only"
   vpc_id      = var.vpc_id
 
-  ingress {
-    from_port       = 80
-    to_port         = 80
-    protocol        = "tcp"
-    security_groups = [aws_security_group.ecs_tasks.id]
-  }
-
   egress {
     from_port   = 0
     to_port     = 0
@@ -124,4 +109,25 @@ resource "aws_security_group" "internal_alb" {
   }
 
   tags = { Name = "${var.project_name}-internal-alb-sg" }
+}
+
+# These rules are defined outside their SGs to break the
+# ecs_tasks <-> internal_alb reference cycle.
+resource "aws_security_group_rule" "internal_alb_ingress_from_ecs" {
+  type                     = "ingress"
+  from_port                = 80
+  to_port                  = 80
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.internal_alb.id
+  source_security_group_id = aws_security_group.ecs_tasks.id
+}
+
+resource "aws_security_group_rule" "ecs_tasks_ingress_from_internal_alb" {
+  type                     = "ingress"
+  from_port                = 8000
+  to_port                  = 8000
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.ecs_tasks.id
+  source_security_group_id = aws_security_group.internal_alb.id
+  description              = "PresenceServer - from internal ALB"
 }

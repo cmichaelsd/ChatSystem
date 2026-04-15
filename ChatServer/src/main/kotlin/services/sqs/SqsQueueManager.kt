@@ -23,4 +23,9 @@ class SqsQueueManager(
         logger.info("Claimed SQS queue: $queueUrl")
         return queueUrl
     }
+
+    fun delete(queueUrl: String) {
+        sqsClient.deleteQueue { it.queueUrl(queueUrl) }
+        logger.info("Deleted SQS queue: $queueUrl")
+    }
 }
