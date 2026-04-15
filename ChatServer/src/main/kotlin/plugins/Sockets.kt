@@ -51,7 +51,7 @@ fun Application.configureSockets() {
                 sessionStore.add(userId, this)
 
                 // Immediately send the connecting user their own presence and a snapshot
-                // of everyone already online on this server — no SQS round-trip needed.
+                // of everyone already online on this server - no SQS round-trip needed.
                 val alreadyOnline = sessionStore.getAll()
                 for (onlineUserId in alreadyOnline) {
                     send(Frame.Text(Json.encodeToString(PresenceEvent(userId = onlineUserId, online = true))))
