@@ -3,10 +3,6 @@ variable "aws_region" {
   default = "us-west-1"
 }
 
-variable "aws_account_id" {
-  type = string
-}
-
 variable "project_name" {
   type    = string
   default = "chatsystem"

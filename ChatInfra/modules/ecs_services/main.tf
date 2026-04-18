@@ -1,3 +1,5 @@
+data "aws_caller_identity" "current" {}
+
 # --- ApiServer ---
 
 resource "aws_ecs_task_definition" "apiserver" {
@@ -10,7 +12,7 @@ resource "aws_ecs_task_definition" "apiserver" {
 
   container_definitions = jsonencode([{
     name      = "apiserver"
-    image     = "${var.aws_account_id}.dkr.ecr.${var.region}.amazonaws.com/chatsystem/apiserver:latest"
+    image     = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.region}.amazonaws.com/chatsystem/apiserver:latest"
     essential = true
 
     portMappings = [{
@@ -72,7 +74,7 @@ resource "aws_ecs_task_definition" "presenceserver" {
 
   container_definitions = jsonencode([{
     name      = "presenceserver"
-    image     = "${var.aws_account_id}.dkr.ecr.${var.region}.amazonaws.com/chatsystem/presenceserver:latest"
+    image     = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.region}.amazonaws.com/chatsystem/presenceserver:latest"
     essential = true
 
     portMappings = [{
@@ -81,7 +83,7 @@ resource "aws_ecs_task_definition" "presenceserver" {
     }]
 
     environment = [
-      { name = "REDIS_URL", value = "redis://${var.redis_address}:6379" }
+      { name = "REDIS_URL", value = "rediss://${var.redis_address}:6379" }
     ]
 
     secrets = [
@@ -133,7 +135,7 @@ resource "aws_ecs_task_definition" "chatserver" {
 
   container_definitions = jsonencode([{
     name      = "chatserver"
-    image     = "${var.aws_account_id}.dkr.ecr.${var.region}.amazonaws.com/chatsystem/chatserver:latest"
+    image     = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.region}.amazonaws.com/chatsystem/chatserver:latest"
     essential = true
 
     portMappings = [{

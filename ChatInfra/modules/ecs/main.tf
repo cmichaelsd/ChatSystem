@@ -1,20 +1,22 @@
+data "aws_caller_identity" "current" {}
+
 resource "aws_ecs_cluster" "main" {
   name = var.project_name
 }
 
 resource "aws_cloudwatch_log_group" "apiserver" {
   name              = "/ecs/${var.project_name}/apiserver"
-  retention_in_days = 7
+  retention_in_days = 365
 }
 
 resource "aws_cloudwatch_log_group" "chatserver" {
   name              = "/ecs/${var.project_name}/chatserver"
-  retention_in_days = 7
+  retention_in_days = 365
 }
 
 resource "aws_cloudwatch_log_group" "presenceserver" {
   name              = "/ecs/${var.project_name}/presenceserver"
-  retention_in_days = 7
+  retention_in_days = 365
 }
 
 # --- Execution role (used by ECS agent to pull images and inject secrets) ---
@@ -30,10 +32,10 @@ resource "aws_iam_role" "ecs_execution_api" {
       Action    = "sts:AssumeRole"
       Condition = {
         ArnLike = {
-          "aws:SourceArn" = "arn:aws:ecs:${var.region}:${var.aws_account_id}:*"
+          "aws:SourceArn" = "arn:aws:ecs:${var.region}:${data.aws_caller_identity.current.account_id}:*"
         }
         StringEquals = {
-          "aws:SourceAccount" = var.aws_account_id
+          "aws:SourceAccount" = data.aws_caller_identity.current.account_id
         }
       }
     }]
@@ -51,10 +53,10 @@ resource "aws_iam_role" "ecs_execution_chatserver" {
       Action    = "sts:AssumeRole"
       Condition = {
         ArnLike = {
-          "aws:SourceArn" = "arn:aws:ecs:${var.region}:${var.aws_account_id}:*"
+          "aws:SourceArn" = "arn:aws:ecs:${var.region}:${data.aws_caller_identity.current.account_id}:*"
         }
         StringEquals = {
-          "aws:SourceAccount" = var.aws_account_id
+          "aws:SourceAccount" = data.aws_caller_identity.current.account_id
         }
       }
     }]
@@ -72,10 +74,10 @@ resource "aws_iam_role" "ecs_execution_presenceserver" {
       Action    = "sts:AssumeRole"
       Condition = {
         ArnLike = {
-          "aws:SourceArn" = "arn:aws:ecs:${var.region}:${var.aws_account_id}:*"
+          "aws:SourceArn" = "arn:aws:ecs:${var.region}:${data.aws_caller_identity.current.account_id}:*"
         }
         StringEquals = {
-          "aws:SourceAccount" = var.aws_account_id
+          "aws:SourceAccount" = data.aws_caller_identity.current.account_id
         }
       }
     }]
@@ -163,10 +165,10 @@ resource "aws_iam_role" "chatserver_task" {
       Action    = "sts:AssumeRole"
       Condition = {
         ArnLike = {
-          "aws:SourceArn" = "arn:aws:ecs:${var.region}:${var.aws_account_id}:*"
+          "aws:SourceArn" = "arn:aws:ecs:${var.region}:${data.aws_caller_identity.current.account_id}:*"
         }
         StringEquals = {
-          "aws:SourceAccount" = var.aws_account_id
+          "aws:SourceAccount" = data.aws_caller_identity.current.account_id
         }
       }
     }]
@@ -188,6 +190,7 @@ resource "aws_iam_role_policy" "chatserver_dynamodb" {
         "dynamodb:DeleteItem",
         "dynamodb:UpdateItem",
         "dynamodb:Query",
+        "dynamodb:Scan",
       ]
       Resource = var.dynamodb_table_arns
     }]
@@ -211,7 +214,7 @@ resource "aws_iam_role_policy" "chatserver_sqs" {
         "sqs:GetQueueUrl",
         "sqs:GetQueueAttributes",
       ]
-      Resource = "arn:aws:sqs:${var.region}:${var.aws_account_id}:chat-server-*"
+      Resource = "arn:aws:sqs:${var.region}:${data.aws_caller_identity.current.account_id}:chat-server-*"
     }]
   })
 }

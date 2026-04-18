@@ -14,9 +14,9 @@ cd "$SCRIPT_DIR/../ChatClient"
 VITE_API_BASE=$API_URL VITE_WS_URL=$WS_URL npm run build
 
 echo "Syncing to S3..."
-aws s3 sync dist/ s3://$BUCKET/ --delete
+aws s3 sync dist/ s3://$BUCKET/ --delete --profile chatsystem
 
 echo "Invalidating CloudFront cache..."
-aws cloudfront create-invalidation --distribution-id $DIST_ID --paths "/*" --output text
+aws cloudfront create-invalidation --distribution-id $DIST_ID --paths "/*" --output text --profile chatsystem
 
 echo "Done. Site is live."

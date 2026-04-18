@@ -3,17 +3,27 @@
   <component name="ChangeListManager">
     <list default="true" id="34b1aec0-cf89-4672-82a0-84670729e71f" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ApiServer/app/routers/presence.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/ApiServer/app/schemas/presence.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/ApiServer/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/ApiServer/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ApiServer/tests/test_presence_proxy.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/ChatClient/src/components/members/MemberList.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/ChatClient/src/components/members/MemberList.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ChatClient/src/hooks/usePresencePoller.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/ChatClient/src/lib/api.ts" beforeDir="false" afterPath="$PROJECT_DIR$/ChatClient/src/lib/api.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ChatClient/src/lib/constants.ts" beforeDir="false" afterPath="$PROJECT_DIR$/ChatClient/src/lib/constants.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ChatClient/src/lib/wsManager.ts" beforeDir="false" afterPath="$PROJECT_DIR$/ChatClient/src/lib/wsManager.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ChatClient/src/types/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/ChatClient/src/types/index.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ChatServer/src/main/kotlin/plugins/Sockets.kt" beforeDir="false" afterPath="$PROJECT_DIR$/ChatServer/src/main/kotlin/plugins/Sockets.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ApiServer/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/ApiServer/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatInfra/deploy-client.sh" beforeDir="false" afterPath="$PROJECT_DIR$/ChatInfra/deploy-client.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatInfra/main.tf" beforeDir="false" afterPath="$PROJECT_DIR$/ChatInfra/main.tf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatInfra/modules/alb/main.tf" beforeDir="false" afterPath="$PROJECT_DIR$/ChatInfra/modules/alb/main.tf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatInfra/modules/alb/variables.tf" beforeDir="false" afterPath="$PROJECT_DIR$/ChatInfra/modules/alb/variables.tf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatInfra/modules/dynamodb/main.tf" beforeDir="false" afterPath="$PROJECT_DIR$/ChatInfra/modules/dynamodb/main.tf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatInfra/modules/ecs/main.tf" beforeDir="false" afterPath="$PROJECT_DIR$/ChatInfra/modules/ecs/main.tf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatInfra/modules/ecs/variables.tf" beforeDir="false" afterPath="$PROJECT_DIR$/ChatInfra/modules/ecs/variables.tf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatInfra/modules/ecs_services/main.tf" beforeDir="false" afterPath="$PROJECT_DIR$/ChatInfra/modules/ecs_services/main.tf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatInfra/modules/ecs_services/variables.tf" beforeDir="false" afterPath="$PROJECT_DIR$/ChatInfra/modules/ecs_services/variables.tf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatInfra/modules/elasticache/main.tf" beforeDir="false" afterPath="$PROJECT_DIR$/ChatInfra/modules/elasticache/main.tf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatInfra/modules/elasticache/outputs.tf" beforeDir="false" afterPath="$PROJECT_DIR$/ChatInfra/modules/elasticache/outputs.tf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatInfra/modules/rds/main.tf" beforeDir="false" afterPath="$PROJECT_DIR$/ChatInfra/modules/rds/main.tf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatInfra/modules/secrets/main.tf" beforeDir="false" afterPath="$PROJECT_DIR$/ChatInfra/modules/secrets/main.tf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatInfra/modules/static_site/main.tf" beforeDir="false" afterPath="$PROJECT_DIR$/ChatInfra/modules/static_site/main.tf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatInfra/modules/vpc/main.tf" beforeDir="false" afterPath="$PROJECT_DIR$/ChatInfra/modules/vpc/main.tf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatInfra/providers.tf" beforeDir="false" afterPath="$PROJECT_DIR$/ChatInfra/providers.tf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatInfra/terraform.tfvars" beforeDir="false" afterPath="$PROJECT_DIR$/ChatInfra/terraform.tfvars" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ChatInfra/variables.tf" beforeDir="false" afterPath="$PROJECT_DIR$/ChatInfra/variables.tf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PresenceServer/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/PresenceServer/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/diagram.svg" beforeDir="false" afterPath="$PROJECT_DIR$/diagram.svg" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -31,19 +41,19 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Gradle./home/cole/Projects/ChatSystem/ChatServer [ktlintFormat].executor": "Run",
-    "Gradle./home/cole/Projects/ChatSystem/ChatServer [test clean].executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "master",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "/home/cole/Projects/ChatSystem"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Gradle./home/cole/Projects/ChatSystem/ChatServer [ktlintFormat].executor&quot;: &quot;Run&quot;,
+    &quot;Gradle./home/cole/Projects/ChatSystem/ChatServer [test clean].executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;feature/soc2-compliant&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/cole/Projects/ChatSystem&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager" selected="Gradle./home/cole/Projects/ChatSystem/ChatServer [test clean]">
     <configuration name="/home/cole/Projects/ChatSystem/ChatServer [ktlintFormat]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>

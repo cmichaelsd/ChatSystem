@@ -1,3 +1,99 @@
+# --- Access Log Bucket (shared by public ALB and NLB) ---
+
+resource "random_id" "log_bucket_suffix" {
+  byte_length = 4
+}
+
+resource "aws_s3_bucket" "access_logs" {
+  bucket        = "${var.project_name}-alb-logs-${random_id.log_bucket_suffix.hex}"
+  force_destroy = false
+
+  tags = { Name = "${var.project_name}-alb-logs" }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "access_logs" {
+  bucket = aws_s3_bucket.access_logs.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "access_logs" {
+  bucket                  = aws_s3_bucket.access_logs.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "access_logs" {
+  bucket = aws_s3_bucket.access_logs.id
+
+  rule {
+    id     = "access-log-retention"
+    status = "Enabled"
+    filter {}
+
+    transition {
+      days          = 90
+      storage_class = "GLACIER"
+    }
+
+    expiration {
+      days = 365
+    }
+  }
+}
+
+# Looks up the ELB service account ARN for the current region automatically
+data "aws_elb_service_account" "main" {}
+
+# Looks up the current AWS account ID without requiring it as a variable
+data "aws_caller_identity" "current" {}
+
+resource "aws_s3_bucket_policy" "access_logs" {
+  bucket = aws_s3_bucket.access_logs.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "ELBAccessLogDelivery"
+        Effect    = "Allow"
+        Principal = { AWS = data.aws_elb_service_account.main.arn }
+        Action    = "s3:PutObject"
+        Resource  = "${aws_s3_bucket.access_logs.arn}/*"
+      },
+      {
+        Sid       = "AWSLogDeliveryAclCheck"
+        Effect    = "Allow"
+        Principal = { Service = "delivery.logs.amazonaws.com" }
+        Action    = "s3:GetBucketAcl"
+        Resource  = aws_s3_bucket.access_logs.arn
+        Condition = {
+          StringEquals = { "aws:SourceAccount" = data.aws_caller_identity.current.account_id }
+        }
+      },
+      {
+        Sid       = "AWSLogDeliveryWrite"
+        Effect    = "Allow"
+        Principal = { Service = "delivery.logs.amazonaws.com" }
+        Action    = "s3:PutObject"
+        Resource  = "${aws_s3_bucket.access_logs.arn}/*"
+        Condition = {
+          StringEquals = {
+            "s3:x-amz-acl"      = "bucket-owner-full-control"
+            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+          }
+        }
+      }
+    ]
+  })
+}
+
 # --- Public ALB (ApiServer + PresenceServer) ---
 
 resource "aws_lb" "public_alb" {
@@ -6,6 +102,13 @@ resource "aws_lb" "public_alb" {
   load_balancer_type = "application"
   security_groups    = [var.alb_sg_id]
   subnets            = var.public_subnet_ids
+
+  access_logs {
+    bucket  = aws_s3_bucket.access_logs.id
+    enabled = true
+  }
+
+  depends_on = [aws_s3_bucket_policy.access_logs]
 }
 
 resource "aws_lb_target_group" "apiserver" {
@@ -77,6 +180,13 @@ resource "aws_lb" "chatserver_nlb" {
   internal           = false
   load_balancer_type = "network"
   subnets            = var.public_subnet_ids
+
+  access_logs {
+    bucket  = aws_s3_bucket.access_logs.id
+    enabled = true
+  }
+
+  depends_on = [aws_s3_bucket_policy.access_logs]
 }
 
 resource "aws_lb_target_group" "chatserver" {

@@ -12,5 +12,6 @@ terraform {
 }
 
 provider "aws" {
-  region = "us-west-1"
+  region  = var.aws_region
+  profile = "chatsystem"
 }

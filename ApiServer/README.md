@@ -40,11 +40,11 @@ Additionally, there are S2S calls, API Server will contact Chat Server to update
 
 
 ## How to push docker image to AWS ECR
-1) `aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin 657083456388.dkr.ecr.us-west-1.amazonaws.com`
+1) `aws ecr get-login-password --region us-west-1 --profile chatsystem | docker login --username AWS --password-stdin 657083456388.dkr.ecr.us-west-1.amazonaws.com`
 2) `docker build -t chatsystem-apiserver .`
 3) `docker tag chatsystem-apiserver:latest 657083456388.dkr.ecr.us-west-1.amazonaws.com/chatsystem/apiserver:latest`
 4) `docker push 657083456388.dkr.ecr.us-west-1.amazonaws.com/chatsystem/apiserver:latest`
-5) For image update in ECS (if needed): `aws ecs update-service --cluster chatsystem --service chatsystem-apiserver --force-new-deployment`
+5) For image update in ECS (if needed): `aws ecs update-service --cluster chatsystem --service chatsystem-apiserver --force-new-deployment --profile chatsystem --region us-west-1`
 
 
 ## If packages are altered
