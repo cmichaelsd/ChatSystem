@@ -51,7 +51,6 @@ module "ecs" {
   source               = "./modules/ecs"
   project_name         = var.project_name
   region               = var.aws_region
-  aws_account_id       = var.aws_account_id
   db_secret_arn        = module.secrets.db_secret_arn
   jwt_secret_arn       = module.secrets.jwt_secret_arn
   internal_api_key_arn = module.secrets.internal_api_key_arn
@@ -65,11 +64,15 @@ module "static_site" {
   chatserver_nlb_dns_name = module.alb.chatserver_nlb_dns_name
 }
 
+module "cloudtrail" {
+  source       = "./modules/cloudtrail"
+  project_name = var.project_name
+}
+
 module "ecs_services" {
   source                            = "./modules/ecs_services"
   project_name                      = var.project_name
   region                            = var.aws_region
-  aws_account_id                    = var.aws_account_id
   cluster_id                        = module.ecs.cluster_id
   execution_role_api_arn            = module.ecs.execution_role_api_arn
   execution_role_chatserver_arn     = module.ecs.execution_role_chatserver_arn

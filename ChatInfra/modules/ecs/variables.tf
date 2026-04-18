@@ -6,10 +6,6 @@ variable "region" {
   type = string
 }
 
-variable "aws_account_id" {
-  type = string
-}
-
 variable "db_secret_arn" {
   type = string
 }

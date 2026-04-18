@@ -8,6 +8,10 @@ resource "aws_dynamodb_table" "server_registry" {
     type = "S"
   }
 
+  server_side_encryption {
+    enabled = true
+  }
+
   tags = { Name = "chatsystem-server-registry" }
 }
 
@@ -19,6 +23,10 @@ resource "aws_dynamodb_table" "user_connections" {
   attribute {
     name = "userId"
     type = "S"
+  }
+
+  server_side_encryption {
+    enabled = true
   }
 
   tags = { Name = "chatsystem-user-connections" }
@@ -40,6 +48,10 @@ resource "aws_dynamodb_table" "conversation_members" {
     type = "S"
   }
 
+  server_side_encryption {
+    enabled = true
+  }
+
   tags = { Name = "chatsystem-conversation-members" }
 }
 
@@ -59,6 +71,10 @@ resource "aws_dynamodb_table" "messages" {
     type = "S"
   }
 
+  server_side_encryption {
+    enabled = true
+  }
+
   tags = { Name = "chatsystem-messages" }
 }
 
@@ -76,6 +92,10 @@ resource "aws_dynamodb_table" "pending_messages" {
   attribute {
     name = "messageId"
     type = "S"
+  }
+
+  server_side_encryption {
+    enabled = true
   }
 
   tags = { Name = "chatsystem-pending-messages" }
