@@ -46,12 +46,13 @@ class UserRegistry(
     }
 
     fun getAllConnectedUserIds(): List<String> {
-        val response = dynamoClient.scan(
-            ScanRequest.builder()
-                .tableName(tableName)
-                .projectionExpression("userId")
-                .build()
-        )
+        val response =
+            dynamoClient.scan(
+                ScanRequest.builder()
+                    .tableName(tableName)
+                    .projectionExpression("userId")
+                    .build(),
+            )
         return response.items().mapNotNull { it["userId"]?.s() }
     }
 
