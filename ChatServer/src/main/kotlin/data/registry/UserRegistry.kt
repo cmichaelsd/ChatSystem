@@ -6,6 +6,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
 import software.amazon.awssdk.services.dynamodb.model.DeleteItemRequest
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest
+import software.amazon.awssdk.services.dynamodb.model.ScanRequest
 
 class UserRegistry(
     dynamoClient: DynamoDbClient,
@@ -42,6 +43,16 @@ class UserRegistry(
                 it.key(mapOf("userId" to AttributeValue.fromS(userId)))
             }
         return response.item()["serverId"]?.s()
+    }
+
+    fun getAllConnectedUserIds(): List<String> {
+        val response = dynamoClient.scan(
+            ScanRequest.builder()
+                .tableName(tableName)
+                .projectionExpression("userId")
+                .build()
+        )
+        return response.items().mapNotNull { it["userId"]?.s() }
     }
 
     fun deregister(userId: String) {
