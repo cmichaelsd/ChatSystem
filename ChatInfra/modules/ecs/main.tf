@@ -186,6 +186,7 @@ resource "aws_iam_role_policy" "chatserver_dynamodb" {
       Action = [
         "dynamodb:DescribeTable",
         "dynamodb:GetItem",
+        "dynamodb:BatchGetItem",
         "dynamodb:PutItem",
         "dynamodb:DeleteItem",
         "dynamodb:UpdateItem",

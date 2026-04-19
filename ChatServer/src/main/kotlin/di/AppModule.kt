@@ -48,7 +48,7 @@ val appModule =
         single { PendingMessageRepository(get()) }
         single { ConversationRegistry(get()) }
         single { MessageRepository(get()) }
-        single { SqsConsumer(get(), get(), get()) }
+        single { SqsConsumer(get(), get(), get(), get()) }
         single { MessageRouter(get(), get(), get(), get(), get(), get()) }
         single { SessionStore() }
         single {

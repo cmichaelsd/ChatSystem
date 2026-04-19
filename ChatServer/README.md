@@ -1,20 +1,17 @@
 # ChatServer
 
 ## Overview
-This ChatServer handles WebSocket connections and message delivery for the chat system.
+ChatServer handles WebSocket connections and message delivery for the chat system.
 
-A chat server will register itself and its SQS queue URL with DynamoDB.
+A chat server registers itself and its SQS queue URL with DynamoDB on startup.
 
-When a user joins a given chat server the user is associated with the server in DynamoDB.
-Also, a mapping is kept of each user and their WebSocket session at runtime.
+When a user connects, they are associated with this server in DynamoDB and a runtime mapping of userId to WebSocket session is maintained. A presence snapshot is sent to the connecting user showing which of their groupmates (users who share at least one conversation with them) are currently online. Presence is scoped using a GSI on `ConversationMembers` to avoid a full table scan.
 
-When a user sends a message, the target user's server is found from DynamoDB and the associated SQS queue URL is used to route the message to that server for delivery.
+When a user sends a message, the target user's server is found from DynamoDB and the associated SQS queue URL routes the message to that server for delivery.
 
 If the target user is offline the message is saved to a pending messages table in DynamoDB and delivered when the user reconnects.
 
-Both 1-to-1 and group chat use the same conversation model. 
-A conversation has members stored in DynamoDB and a message sent to a conversation is fanned out to all members. Offline behavior is the same 
-- undelivered messages are saved as pending.
+Both 1-to-1 and group chat use the same conversation model. A conversation has members stored in DynamoDB and a message sent to a conversation is fanned out to all members. Offline behavior is the same -- undelivered messages are saved as pending.
 
 Message history is persisted to DynamoDB on every send and can be fetched via the REST API.
 
@@ -36,10 +33,12 @@ Message history is persisted to DynamoDB on every send and can be fetched via th
 | `serverId` |     | String | Server the user is currently connected to |
 
 ### ConversationMembers
-| Attribute        | Key | Type   | Description                    |
-|------------------|-----|--------|--------------------------------|
-| `conversationId` | PK  | String | Unique conversation identifier |
-| `userId`         | SK  | String | Member of the conversation     |
+| Attribute        | Key         | Type   | Description                    |
+|------------------|-------------|--------|--------------------------------|
+| `conversationId` | PK          | String | Unique conversation identifier |
+| `userId`         | SK / GSI PK | String | Member of the conversation     |
+
+**GSI: `userId-index`** -- partition key `userId`, projection `KEYS_ONLY`. Used to look up all conversations a user belongs to, which enables scoped presence snapshots and targeted presence broadcast delivery.
 
 ### Messages
 | Attribute        | Key | Type   | Description                          |

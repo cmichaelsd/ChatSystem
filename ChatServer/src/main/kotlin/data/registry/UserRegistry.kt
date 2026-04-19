@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
 import software.amazon.awssdk.services.dynamodb.model.DeleteItemRequest
+import software.amazon.awssdk.services.dynamodb.model.KeysAndAttributes
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest
 import software.amazon.awssdk.services.dynamodb.model.ScanRequest
 
@@ -54,6 +55,22 @@ class UserRegistry(
                     .build(),
             )
         return response.items().mapNotNull { it["userId"]?.s() }
+    }
+
+    fun getConnectedUsersFrom(userIds: Set<String>): Set<String> {
+        if (userIds.isEmpty()) return emptySet()
+        val connected = mutableSetOf<String>()
+        userIds.chunked(100).forEach { chunk ->
+            val keys = chunk.map { mapOf("userId" to AttributeValue.fromS(it)) }
+            val response =
+                dynamoClient.batchGetItem {
+                    it.requestItems(mapOf(tableName to KeysAndAttributes.builder().keys(keys).build()))
+                }
+            response.responses()[tableName]?.forEach { item ->
+                item["userId"]?.s()?.let { id -> connected.add(id) }
+            }
+        }
+        return connected
     }
 
     fun deregister(userId: String) {

@@ -3,6 +3,7 @@ package org.chatserver.services.sqs
 import io.ktor.websocket.Frame
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.chatserver.data.registry.ConversationRegistry
 import org.chatserver.data.repository.PendingMessageRepository
 import org.chatserver.models.ChatMessage
 import org.chatserver.models.PresenceEvent
@@ -15,6 +16,7 @@ class SqsConsumer(
     private val sqsClient: SqsClient,
     private val sessionStore: SessionStore,
     private val pendingMessageRepository: PendingMessageRepository,
+    private val conversationRegistry: ConversationRegistry,
 ) {
     companion object {
         private const val MAX_MESSAGES = 10
@@ -62,9 +64,11 @@ class SqsConsumer(
 
     private suspend fun handlePresence(event: PresenceEvent) {
         val frame = Frame.Text(Json.encodeToString(event))
-        sessionStore.getAll().forEach { userId ->
-            sessionStore.get(userId)?.send(frame)
-        }
-        logger.debug("Broadcast presence for ${event.userId} online=${event.online} to ${sessionStore.getAll().size} session(s)")
+        val groupmates = conversationRegistry.getGroupmates(event.userId)
+        val recipients = sessionStore.getAll().filter { it in groupmates }
+        recipients.forEach { userId -> sessionStore.get(userId)?.send(frame) }
+        logger.info(
+            "Presence for ${event.userId} online=${event.online}: ${groupmates.size} groupmate(s), ${recipients.size} local recipient(s)",
+        )
     }
 }

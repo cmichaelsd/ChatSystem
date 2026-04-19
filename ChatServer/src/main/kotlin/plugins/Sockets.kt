@@ -13,6 +13,7 @@ import io.ktor.websocket.close
 import io.ktor.websocket.readText
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.chatserver.data.registry.ConversationRegistry
 import org.chatserver.data.registry.ServerRegistry
 import org.chatserver.data.registry.UserRegistry
 import org.chatserver.data.repository.PendingMessageRepository
@@ -31,6 +32,7 @@ fun Application.configureSockets() {
     install(WebSockets)
 
     val userRegistry by inject<UserRegistry>()
+    val conversationRegistry by inject<ConversationRegistry>()
     val sessionStore by inject<SessionStore>()
     val messageRouter by inject<MessageRouter>()
     val pendingMessageRepository by inject<PendingMessageRepository>()
@@ -50,23 +52,23 @@ fun Application.configureSockets() {
                 userRegistry.register(userId)
                 sessionStore.add(userId, this)
 
-                // Send a cross-instance presence snapshot by reading UserConnections,
-                // which reflects all connected users regardless of which server they're on.
-                val alreadyOnline = userRegistry.getAllConnectedUserIds()
-                for (onlineUserId in alreadyOnline) {
-                    send(Frame.Text(Json.encodeToString(PresenceEvent(userId = onlineUserId, online = true))))
-                }
-
-                // Notify all other servers that this user came online.
-                broadcastPresence(userId, online = true, serverRegistry, sqsClient)
-
-                val pending = pendingMessageRepository.fetchAndClear(userId)
-                if (pending.isNotEmpty()) {
-                    logger.info("Delivering ${pending.size} pending message(s) to $userId")
-                    pending.forEach { send(Frame.Text(Json.encodeToString(it))) }
-                }
-
                 try {
+                    val groupmates = conversationRegistry.getGroupmates(userId)
+                    val onlineGroupmates = userRegistry.getConnectedUsersFrom(groupmates)
+                    logger.info("Presence snapshot for $userId: ${groupmates.size} groupmate(s), ${onlineGroupmates.size} online")
+                    send(Frame.Text(Json.encodeToString(PresenceEvent(userId = userId, online = true))))
+                    for (onlineUserId in onlineGroupmates) {
+                        send(Frame.Text(Json.encodeToString(PresenceEvent(userId = onlineUserId, online = true))))
+                    }
+
+                    broadcastPresence(userId, online = true, serverRegistry, sqsClient)
+
+                    val pending = pendingMessageRepository.fetchAndClear(userId)
+                    if (pending.isNotEmpty()) {
+                        logger.info("Delivering ${pending.size} pending message(s) to $userId")
+                        pending.forEach { send(Frame.Text(Json.encodeToString(it))) }
+                    }
+
                     for (frame in incoming) {
                         if (frame is Frame.Text) {
                             try {
