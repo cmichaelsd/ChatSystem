@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.chatserver.data.registry.ConversationRegistry
 import org.chatserver.data.repository.PendingMessageRepository
 import org.chatserver.models.ChatMessage
 import org.chatserver.models.PresenceEvent
@@ -30,7 +31,8 @@ class SqsConsumerTest {
     private val sqsClient = mockk<SqsClient>(relaxed = true)
     private val sessionStore = mockk<SessionStore>()
     private val pendingMessageRepository = mockk<PendingMessageRepository>(relaxed = true)
-    private val consumer = SqsConsumer(sqsClient, sessionStore, pendingMessageRepository)
+    private val conversationRegistry = mockk<ConversationRegistry>()
+    private val consumer = SqsConsumer(sqsClient, sessionStore, pendingMessageRepository, conversationRegistry)
 
     private val chatMessage = ChatMessage(fromUserId = "alice", toUserId = "bob", conversationId = "conv-1", content = "hello")
     private val chatMessageJson = Json.encodeToString(chatMessage)
@@ -163,12 +165,12 @@ class SqsConsumerTest {
         }
 
     @Test
-    fun `presence event is broadcast to all connected sessions`() =
+    fun `presence event is delivered only to groupmates of the sender`() =
         runTest {
-            val session1 = mockk<DefaultWebSocketServerSession>()
-            val session2 = mockk<DefaultWebSocketServerSession>()
-            coEvery { session1.send(any<Frame>()) } returns Unit
-            coEvery { session2.send(any<Frame>()) } returns Unit
+            val groupmateSession = mockk<DefaultWebSocketServerSession>()
+            val nonGroupmateSession = mockk<DefaultWebSocketServerSession>()
+            coEvery { groupmateSession.send(any<Frame>()) } returns Unit
+            coEvery { nonGroupmateSession.send(any<Frame>()) } returns Unit
 
             val presenceEvent = PresenceEvent(userId = "charlie", online = true)
             val presenceEnvelopeJson =
@@ -179,15 +181,15 @@ class SqsConsumerTest {
                     .messages(buildSqsMessage(presenceEnvelopeJson))
                     .build(),
             )
-            every { sessionStore.getAll() } returns setOf("alice", "bob")
-            every { sessionStore.get("alice") } returns session1
-            every { sessionStore.get("bob") } returns session2
+            every { conversationRegistry.getGroupmates("charlie") } returns setOf("alice")
+            every { sessionStore.getAll() } returns setOf("alice", "dave")
+            every { sessionStore.get("alice") } returns groupmateSession
 
             val job = launch { consumer.start("https://sqs/queue") }
             job.join()
 
-            coVerify(exactly = 1) { session1.send(any<Frame>()) }
-            coVerify(exactly = 1) { session2.send(any<Frame>()) }
+            coVerify(exactly = 1) { groupmateSession.send(any<Frame>()) }
+            coVerify(exactly = 0) { nonGroupmateSession.send(any<Frame>()) }
             verify(exactly = 0) { pendingMessageRepository.save(any()) }
         }
 }

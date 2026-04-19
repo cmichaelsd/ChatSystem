@@ -5,6 +5,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import software.amazon.awssdk.services.dynamodb.model.AttributeDefinition
 import software.amazon.awssdk.services.dynamodb.model.BillingMode
 import software.amazon.awssdk.services.dynamodb.model.CreateTableRequest
+import software.amazon.awssdk.services.dynamodb.model.GlobalSecondaryIndex
 import software.amazon.awssdk.services.dynamodb.model.KeySchemaElement
 import software.amazon.awssdk.services.dynamodb.model.KeyType
 import software.amazon.awssdk.services.dynamodb.model.ResourceInUseException
@@ -16,6 +17,10 @@ abstract class AbstractDynamoCompositeRegistry(protected val dynamoClient: Dynam
     protected abstract val partitionKey: String
     protected abstract val sortKey: String
 
+    protected open fun gsiDefinitions(): List<GlobalSecondaryIndex> = emptyList()
+
+    protected open fun gsiAttributeDefinitions(): List<AttributeDefinition> = emptyList()
+
     private val logger = LoggerFactory.getLogger(AbstractDynamoCompositeRegistry::class.java)
 
     protected fun ensureTableExists() {
@@ -24,20 +29,24 @@ abstract class AbstractDynamoCompositeRegistry(protected val dynamoClient: Dynam
         } catch (e: ResourceNotFoundException) {
             logger.info("$tableName table not found, creating...")
             try {
-                dynamoClient.createTable(
+                val attrDefs =
+                    buildList {
+                        add(AttributeDefinition.builder().attributeName(partitionKey).attributeType(ScalarAttributeType.S).build())
+                        add(AttributeDefinition.builder().attributeName(sortKey).attributeType(ScalarAttributeType.S).build())
+                        addAll(gsiAttributeDefinitions())
+                    }
+                val tableBuilder =
                     CreateTableRequest.builder()
                         .tableName(tableName)
                         .billingMode(BillingMode.PAY_PER_REQUEST)
-                        .attributeDefinitions(
-                            AttributeDefinition.builder().attributeName(partitionKey).attributeType(ScalarAttributeType.S).build(),
-                            AttributeDefinition.builder().attributeName(sortKey).attributeType(ScalarAttributeType.S).build(),
-                        )
+                        .attributeDefinitions(attrDefs)
                         .keySchema(
                             KeySchemaElement.builder().attributeName(partitionKey).keyType(KeyType.HASH).build(),
                             KeySchemaElement.builder().attributeName(sortKey).keyType(KeyType.RANGE).build(),
                         )
-                        .build(),
-                )
+                val gsis = gsiDefinitions()
+                if (gsis.isNotEmpty()) tableBuilder.globalSecondaryIndexes(gsis)
+                dynamoClient.createTable(tableBuilder.build())
                 dynamoClient.waiter().waitUntilTableExists { it.tableName(tableName) }
                 logger.info("$tableName table created")
             } catch (e: ResourceInUseException) {

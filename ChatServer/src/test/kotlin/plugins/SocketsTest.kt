@@ -17,6 +17,7 @@ import io.mockk.verify
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.chatserver.data.registry.ConversationRegistry
 import org.chatserver.data.registry.ServerRegistry
 import org.chatserver.data.registry.UserRegistry
 import org.chatserver.data.repository.PendingMessageRepository
@@ -42,6 +43,7 @@ class SocketsTest {
     private val pendingRepo = mockk<PendingMessageRepository>(relaxed = true)
     private val serverRegistry = mockk<ServerRegistry>(relaxed = true)
     private val sqsClient = mockk<SqsClient>(relaxed = true)
+    private val conversationRegistry = mockk<ConversationRegistry>(relaxed = true)
 
     private fun withChatApp(block: suspend ApplicationTestBuilder.(client: HttpClient) -> Unit) {
         testApplication {
@@ -55,6 +57,7 @@ class SocketsTest {
                             single { pendingRepo }
                             single { serverRegistry }
                             single { sqsClient }
+                            single { conversationRegistry }
                         },
                     )
                 }
@@ -89,6 +92,8 @@ class SocketsTest {
         withChatApp { client ->
             client.webSocket("/ws?token=${token("alice")}") {
                 withTimeout(2000.milliseconds) {
+                    // First frame is the self-presence event; second is the pending message.
+                    incoming.receive()
                     val frame = incoming.receive()
                     if (frame is Frame.Text) received.add(frame.readText())
                 }
