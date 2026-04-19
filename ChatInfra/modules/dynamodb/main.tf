@@ -48,6 +48,12 @@ resource "aws_dynamodb_table" "conversation_members" {
     type = "S"
   }
 
+  global_secondary_index {
+    name            = "userId-index"
+    hash_key        = "userId"
+    projection_type = "KEYS_ONLY"
+  }
+
   server_side_encryption {
     enabled = true
   }
