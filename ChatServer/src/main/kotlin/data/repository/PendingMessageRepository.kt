@@ -5,9 +5,11 @@ import org.chatserver.models.ChatMessage
 import org.slf4j.LoggerFactory
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
-import software.amazon.awssdk.services.dynamodb.model.DeleteItemRequest
+import software.amazon.awssdk.services.dynamodb.model.BatchWriteItemRequest
+import software.amazon.awssdk.services.dynamodb.model.DeleteRequest
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest
 import software.amazon.awssdk.services.dynamodb.model.QueryRequest
+import software.amazon.awssdk.services.dynamodb.model.WriteRequest
 import java.time.Instant
 import java.util.UUID
 
@@ -61,11 +63,22 @@ class PendingMessageRepository(dynamoClient: DynamoDbClient) : AbstractDynamoCom
                 )
             }
 
-        response.items().forEach { item ->
-            dynamoClient.deleteItem(
-                DeleteItemRequest.builder()
-                    .tableName(tableName)
-                    .key(mapOf(partitionKey to item[partitionKey]!!, sortKey to item[sortKey]!!))
+        response.items().chunked(25).forEach { chunk ->
+            dynamoClient.batchWriteItem(
+                BatchWriteItemRequest.builder()
+                    .requestItems(
+                        mapOf(
+                            tableName to chunk.map { item ->
+                                WriteRequest.builder()
+                                    .deleteRequest(
+                                        DeleteRequest.builder()
+                                            .key(mapOf(partitionKey to item[partitionKey]!!, sortKey to item[sortKey]!!))
+                                            .build(),
+                                    )
+                                    .build()
+                            },
+                        ),
+                    )
                     .build(),
             )
         }

@@ -16,7 +16,6 @@ fun Application.configureConversationRoutes(
     internalApiKey: String = System.getenv("INTERNAL_API_KEY") ?: error("INTERNAL_API_KEY env var not set"),
 ) {
     val conversationRegistry by inject<ConversationRegistry>()
-    conversationRegistry.init()
 
     routing {
         post("/conversations") {
