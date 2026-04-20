@@ -12,7 +12,7 @@ resource "aws_dynamodb_table" "server_registry" {
     enabled = true
   }
 
-  tags = { Name = "chatsystem-server-registry" }
+  tags = { Name = "${var.project_name}-server-registry" }
 }
 
 resource "aws_dynamodb_table" "user_connections" {
@@ -29,7 +29,7 @@ resource "aws_dynamodb_table" "user_connections" {
     enabled = true
   }
 
-  tags = { Name = "chatsystem-user-connections" }
+  tags = { Name = "${var.project_name}-user-connections" }
 }
 
 resource "aws_dynamodb_table" "conversation_members" {
@@ -58,7 +58,7 @@ resource "aws_dynamodb_table" "conversation_members" {
     enabled = true
   }
 
-  tags = { Name = "chatsystem-conversation-members" }
+  tags = { Name = "${var.project_name}-conversation-members" }
 }
 
 resource "aws_dynamodb_table" "messages" {
@@ -81,7 +81,7 @@ resource "aws_dynamodb_table" "messages" {
     enabled = true
   }
 
-  tags = { Name = "chatsystem-messages" }
+  tags = { Name = "${var.project_name}-messages" }
 }
 
 resource "aws_dynamodb_table" "pending_messages" {
@@ -104,5 +104,5 @@ resource "aws_dynamodb_table" "pending_messages" {
     enabled = true
   }
 
-  tags = { Name = "chatsystem-pending-messages" }
+  tags = { Name = "${var.project_name}-pending-messages" }
 }
