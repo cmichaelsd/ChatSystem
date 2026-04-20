@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from redis.asyncio import Redis
 
-from app.dependencies import get_current_user_id, verify_internal_key  # get_current_user_id used by GET /{user_id}
+from app.dependencies import get_current_user_id, verify_internal_key
 from app.redis import get_redis
 from app.repos.presence import set_online, is_online, are_online
 from app.schemas.presence import HeartbeatRequest, PresenceResponse, BatchPresenceRequest, BatchPresenceResponse
