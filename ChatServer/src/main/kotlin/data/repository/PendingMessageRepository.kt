@@ -68,15 +68,16 @@ class PendingMessageRepository(dynamoClient: DynamoDbClient) : AbstractDynamoCom
                 BatchWriteItemRequest.builder()
                     .requestItems(
                         mapOf(
-                            tableName to chunk.map { item ->
-                                WriteRequest.builder()
-                                    .deleteRequest(
-                                        DeleteRequest.builder()
-                                            .key(mapOf(partitionKey to item[partitionKey]!!, sortKey to item[sortKey]!!))
-                                            .build(),
-                                    )
-                                    .build()
-                            },
+                            tableName to
+                                chunk.map { item ->
+                                    WriteRequest.builder()
+                                        .deleteRequest(
+                                            DeleteRequest.builder()
+                                                .key(mapOf(partitionKey to item[partitionKey]!!, sortKey to item[sortKey]!!))
+                                                .build(),
+                                        )
+                                        .build()
+                                },
                         ),
                     )
                     .build(),
