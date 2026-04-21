@@ -68,3 +68,14 @@ async def test_batch_presence_wrong_key(unauthed_client):
         headers={"x-internal-key": "wrongkey"},
     )
     assert resp.status_code == 403
+
+
+async def test_health(client):
+    resp = await client.get("/health")
+    assert resp.status_code == 200
+    assert resp.json() == {"status": "ok"}
+
+
+async def test_heartbeat_missing_key(unauthed_client):
+    resp = await unauthed_client.post("/presence/heartbeat", json={"user_ids": ["user-1"]})
+    assert resp.status_code == 422

@@ -17,12 +17,6 @@ export interface GroupResponse {
   created_at: string
 }
 
-export interface GroupMemberResponse {
-  group_id: string
-  user_id: string
-  joined_at: string
-}
-
 export interface StoredMessage {
   fromUserId: string
   conversationId: string

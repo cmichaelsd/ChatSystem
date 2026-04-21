@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import type { StoredMessage } from '../../types'
 import { useUserCacheStore } from '../../store/userCacheStore'
 import { getUser } from '../../lib/api'
@@ -21,23 +21,16 @@ function formatTime(sentAt: string): string {
 
 export function MessageBubble({ message, currentUserId }: MessageBubbleProps) {
   const isMine = message.fromUserId === currentUserId
-  const getCache = useUserCacheStore((s) => s.getUser)
   const addUser = useUserCacheStore((s) => s.addUser)
   const cached = useUserCacheStore((s) => s.cache[message.fromUserId])
-  const [, forceRender] = useState(0)
 
   useEffect(() => {
     if (!cached) {
-      getUser(message.fromUserId)
-        .then((user) => {
-          addUser(user)
-          forceRender((n) => n + 1)
-        })
-        .catch(() => {})
+      getUser(message.fromUserId).then(addUser).catch(() => {})
     }
   }, [message.fromUserId])
 
-  const username = getCache(message.fromUserId)?.username ?? message.fromUserId
+  const username = cached?.username ?? message.fromUserId
 
   return (
     <div className={`flex flex-col mb-4 ${isMine ? 'items-end' : 'items-start'}`}>

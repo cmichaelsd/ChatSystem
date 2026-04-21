@@ -6,6 +6,6 @@ services:
       - "8080:8080"
     env_file: .env
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
       interval: 30s
       retries: 3

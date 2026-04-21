@@ -6,8 +6,8 @@ import io.mockk.verify
 import org.chatserver.models.ChatMessage
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
+import software.amazon.awssdk.services.dynamodb.model.BatchWriteItemRequest
 import software.amazon.awssdk.services.dynamodb.model.CreateTableRequest
-import software.amazon.awssdk.services.dynamodb.model.DeleteItemRequest
 import software.amazon.awssdk.services.dynamodb.model.DescribeTableRequest
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest
 import software.amazon.awssdk.services.dynamodb.model.QueryRequest
@@ -98,7 +98,7 @@ class PendingMessageRepositoryTest {
 
         repository.fetchAndClear("bob")
 
-        verify(exactly = 2) { dynamoClient.deleteItem(any<DeleteItemRequest>()) }
+        verify(exactly = 1) { dynamoClient.batchWriteItem(any<BatchWriteItemRequest>()) }
     }
 
     @Test
@@ -109,6 +109,6 @@ class PendingMessageRepositoryTest {
         val messages = repository.fetchAndClear("alice")
 
         assertTrue(messages.isEmpty())
-        verify(exactly = 0) { dynamoClient.deleteItem(any<DeleteItemRequest>()) }
+        verify(exactly = 0) { dynamoClient.batchWriteItem(any<BatchWriteItemRequest>()) }
     }
 }

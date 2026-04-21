@@ -36,3 +36,14 @@ async def remove_conversation_member(conversation_id: str, user_id: str):
         )
     if response.status_code != 204:
         raise HTTPException(status_code=502, detail="Failed to remove member on chat server")
+
+
+async def get_conversation_messages(conversation_id: str) -> list:
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            f"{settings.chat_server_url}/conversations/{conversation_id}/messages",
+            headers=_INTERNAL_HEADERS,
+        )
+    if not response.is_success:
+        raise HTTPException(status_code=502, detail="Failed to fetch messages")
+    return response.json()
