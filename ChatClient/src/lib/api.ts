@@ -77,6 +77,12 @@ export async function getGroups(): Promise<GroupResponse[]> {
   return res.json()
 }
 
+export async function getGroup(groupId: string): Promise<GroupResponse> {
+  const res = await authedFetch(`${API_BASE}/groups/${groupId}`)
+  if (!res.ok) throw new Error('Failed to fetch group')
+  return res.json()
+}
+
 export async function createGroup(name: string): Promise<GroupResponse> {
   const res = await authedFetch(`${API_BASE}/groups`, {
     method: 'POST',

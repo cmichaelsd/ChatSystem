@@ -4,8 +4,11 @@ import io.ktor.websocket.Frame
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.chatserver.data.registry.ConversationRegistry
+import org.chatserver.data.registry.UserRegistry
 import org.chatserver.data.repository.PendingMessageRepository
 import org.chatserver.models.ChatMessage
+import org.chatserver.models.GroupAddedEvent
+import org.chatserver.models.GroupAddedPayload
 import org.chatserver.models.PresenceEvent
 import org.chatserver.models.SqsEnvelope
 import org.chatserver.session.SessionStore
@@ -17,6 +20,7 @@ class SqsConsumer(
     private val sessionStore: SessionStore,
     private val pendingMessageRepository: PendingMessageRepository,
     private val conversationRegistry: ConversationRegistry,
+    private val userRegistry: UserRegistry,
 ) {
     companion object {
         private const val MAX_MESSAGES = 10
@@ -36,11 +40,16 @@ class SqsConsumer(
                 }
 
             for (message in response.messages()) {
-                val envelope = Json.decodeFromString<SqsEnvelope>(message.body())
-                when (envelope.type) {
-                    SqsEnvelope.CHAT -> handleChat(Json.decodeFromString(envelope.payload))
-                    SqsEnvelope.PRESENCE -> handlePresence(Json.decodeFromString(envelope.payload))
-                    else -> logger.warn("Unknown SQS message type: ${envelope.type}")
+                try {
+                    val envelope = Json.decodeFromString<SqsEnvelope>(message.body())
+                    when (envelope.type) {
+                        SqsEnvelope.CHAT -> handleChat(Json.decodeFromString(envelope.payload))
+                        SqsEnvelope.PRESENCE -> handlePresence(Json.decodeFromString(envelope.payload))
+                        SqsEnvelope.GROUP_ADDED -> handleGroupAdded(Json.decodeFromString(envelope.payload))
+                        else -> logger.warn("Unknown SQS message type: ${envelope.type}")
+                    }
+                } catch (e: Exception) {
+                    logger.error("Failed to process SQS message: ${e.message}", e)
                 }
 
                 sqsClient.deleteMessage {
@@ -70,5 +79,33 @@ class SqsConsumer(
         logger.info(
             "Presence for ${event.userId} online=${event.online}: ${groupmates.size} groupmate(s), ${recipients.size} local recipient(s)",
         )
+    }
+
+    private suspend fun handleGroupAdded(payload: GroupAddedPayload) {
+        val members = conversationRegistry.getMembers(payload.conversationId)
+        val addedUserId = payload.userId
+        val existingMembers = members.toSet().minus(addedUserId)
+
+        // Notify the added user if connected to this server
+        val addedSession = sessionStore.get(addedUserId)
+        if (addedSession != null) {
+            addedSession.send(Frame.Text(Json.encodeToString(GroupAddedEvent(conversationId = payload.conversationId))))
+            val onlineMembers = userRegistry.getConnectedUsersFrom(existingMembers)
+            for (uid in onlineMembers) {
+                addedSession.send(Frame.Text(Json.encodeToString(PresenceEvent(userId = uid, online = true))))
+            }
+            logger.info("GROUP_ADDED: notified $addedUserId of ${payload.conversationId}, ${onlineMembers.size} online member(s) sent")
+        }
+
+        // Notify locally-connected existing members if the added user is online
+        val addedOnline = addedSession != null || userRegistry.getConnectedUsersFrom(setOf(addedUserId)).isNotEmpty()
+        if (addedOnline) {
+            val presenceFrame = Frame.Text(Json.encodeToString(PresenceEvent(userId = addedUserId, online = true)))
+            val localExisting = sessionStore.getAll().filter { it in existingMembers }
+            localExisting.forEach { uid -> sessionStore.get(uid)?.send(presenceFrame) }
+            if (localExisting.isNotEmpty()) {
+                logger.info("GROUP_ADDED: broadcast $addedUserId online to ${localExisting.size} local member(s)")
+            }
+        }
     }
 }

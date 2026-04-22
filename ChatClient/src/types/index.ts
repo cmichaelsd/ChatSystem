@@ -38,7 +38,12 @@ export interface WsPresenceEvent {
   online: boolean
 }
 
-export type WsIncomingMessage = OutboundWsMessage | WsPresenceEvent
+export interface WsGroupAddedEvent {
+  type: 'group_added'
+  conversationId: string
+}
+
+export type WsIncomingMessage = OutboundWsMessage | WsPresenceEvent | WsGroupAddedEvent
 
 export interface InboundWsSend {
   conversationId: string

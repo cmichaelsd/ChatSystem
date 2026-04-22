@@ -1,6 +1,8 @@
 import { WS_URL, WS_RECONNECT_DELAY_MS } from './constants'
+import { getGroup, getGroups } from './api'
 import { useMessageStore } from '../store/messageStore'
 import { usePresenceStore } from '../store/presenceStore'
+import { useGroupStore } from '../store/groupStore'
 import type { WsIncomingMessage, InboundWsSend } from '../types'
 
 class WsManager {
@@ -24,6 +26,12 @@ class WsManager {
 
     this.ws = new WebSocket(`${WS_URL}?token=${this.token}`)
 
+    this.ws.onopen = () => {
+      getGroups().then((groups) => {
+        useGroupStore.getState().setGroups(groups)
+      }).catch(() => {})
+    }
+
     this.ws.onmessage = (event) => {
       try {
         const msg: WsIncomingMessage = JSON.parse(event.data)
@@ -36,6 +44,10 @@ class WsManager {
           })
         } else if (msg.type === 'presence') {
           usePresenceStore.getState().setUserPresence(msg.userId, msg.online)
+        } else if (msg.type === 'group_added') {
+          getGroup(msg.conversationId).then((group) => {
+            useGroupStore.getState().addGroup(group)
+          }).catch((e) => console.error('Failed to handle group_added event:', e))
         }
       } catch (e) {
         console.error('WS message error:', e)

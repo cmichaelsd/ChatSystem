@@ -10,5 +10,6 @@ data class SqsEnvelope(
     companion object {
         const val CHAT = "CHAT"
         const val PRESENCE = "PRESENCE"
+        const val GROUP_ADDED = "GROUP_ADDED"
     }
 }
