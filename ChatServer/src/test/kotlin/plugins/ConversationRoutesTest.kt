@@ -10,11 +10,14 @@ import io.ktor.http.contentType
 import io.ktor.server.application.install
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.chatserver.data.registry.ConversationRegistry
+import org.chatserver.data.registry.ServerRegistry
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
+import software.amazon.awssdk.services.sqs.SqsClient
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -24,6 +27,8 @@ class ConversationRoutesTest {
     }
 
     private val registry = mockk<ConversationRegistry>(relaxed = true)
+    private val serverRegistry = mockk<ServerRegistry>(relaxed = true)
+    private val sqsClient = mockk<SqsClient>(relaxed = true)
 
     private fun withConversationApp(block: suspend ApplicationTestBuilder.() -> Unit) {
         testApplication {
@@ -32,6 +37,8 @@ class ConversationRoutesTest {
                     modules(
                         module {
                             single { registry }
+                            single { serverRegistry }
+                            single { sqsClient }
                         },
                     )
                 }
@@ -87,6 +94,8 @@ class ConversationRoutesTest {
 
     @Test
     fun `POST conversations members userId returns 201 and calls addMember`() {
+        every { serverRegistry.getAllQueueUrls() } returns emptyList()
+
         withConversationApp {
             val response =
                 client.post("/conversations/conv-1/members/alice") {
@@ -96,6 +105,21 @@ class ConversationRoutesTest {
         }
 
         verify { registry.addMember("conv-1", "alice") }
+    }
+
+    @Test
+    fun `POST conversations members userId broadcasts GROUP_ADDED via SQS`() {
+        every { serverRegistry.getAllQueueUrls() } returns listOf("https://sqs/queue-1")
+
+        withConversationApp {
+            client.post("/conversations/conv-1/members/alice") {
+                header("x-internal-key", TEST_INTERNAL_KEY)
+            }
+        }
+
+        verify(exactly = 1) {
+            sqsClient.sendMessage(any<java.util.function.Consumer<software.amazon.awssdk.services.sqs.model.SendMessageRequest.Builder>>())
+        }
     }
 
     @Test

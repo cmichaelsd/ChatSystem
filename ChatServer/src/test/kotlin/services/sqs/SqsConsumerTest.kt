@@ -14,8 +14,10 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.chatserver.data.registry.ConversationRegistry
+import org.chatserver.data.registry.UserRegistry
 import org.chatserver.data.repository.PendingMessageRepository
 import org.chatserver.models.ChatMessage
+import org.chatserver.models.GroupAddedPayload
 import org.chatserver.models.PresenceEvent
 import org.chatserver.models.SqsEnvelope
 import org.chatserver.session.SessionStore
@@ -32,7 +34,8 @@ class SqsConsumerTest {
     private val sessionStore = mockk<SessionStore>()
     private val pendingMessageRepository = mockk<PendingMessageRepository>(relaxed = true)
     private val conversationRegistry = mockk<ConversationRegistry>()
-    private val consumer = SqsConsumer(sqsClient, sessionStore, pendingMessageRepository, conversationRegistry)
+    private val userRegistry = mockk<UserRegistry>()
+    private val consumer = SqsConsumer(sqsClient, sessionStore, pendingMessageRepository, conversationRegistry, userRegistry)
 
     private val chatMessage = ChatMessage(fromUserId = "alice", toUserId = "bob", conversationId = "conv-1", content = "hello")
     private val chatMessageJson = Json.encodeToString(chatMessage)
@@ -67,7 +70,7 @@ class SqsConsumerTest {
             val job = launch { consumer.start("https://sqs/queue") }
             job.join()
 
-            coVerify { session.send(match { it is Frame.Text && (it as Frame.Text).readText() == chatMessageJson }) }
+            coVerify { session.send(match { it is Frame.Text && it.readText() == chatMessageJson }) }
             verify(exactly = 0) { pendingMessageRepository.save(any()) }
         }
 
@@ -191,5 +194,52 @@ class SqsConsumerTest {
             coVerify(exactly = 1) { groupmateSession.send(any<Frame>()) }
             coVerify(exactly = 0) { nonGroupmateSession.send(any<Frame>()) }
             verify(exactly = 0) { pendingMessageRepository.save(any()) }
+        }
+
+    @Test
+    fun `GROUP_ADDED sends group event and presence snapshot to locally connected added user`() =
+        runTest {
+            val bobSession = mockk<DefaultWebSocketServerSession>()
+            coEvery { bobSession.send(any<Frame>()) } returns Unit
+
+            val payload = GroupAddedPayload(conversationId = "conv-1", userId = "bob")
+            val envelopeJson = Json.encodeToString(SqsEnvelope(SqsEnvelope.GROUP_ADDED, Json.encodeToString(payload)))
+
+            stubReceiveOnce(ReceiveMessageResponse.builder().messages(buildSqsMessage(envelopeJson)).build())
+
+            every { conversationRegistry.getMembers("conv-1") } returns listOf("alice", "bob")
+            every { sessionStore.get("bob") } returns bobSession
+            every { sessionStore.getAll() } returns setOf("bob")
+            every { userRegistry.getConnectedUsersFrom(setOf("alice")) } returns setOf("alice")
+
+            val job = launch { consumer.start("https://sqs/queue") }
+            job.join()
+
+            // bob receives GroupAddedEvent + PresenceEvent for alice
+            coVerify(exactly = 2) { bobSession.send(any<Frame>()) }
+        }
+
+    @Test
+    fun `GROUP_ADDED notifies locally connected existing members when added user is online elsewhere`() =
+        runTest {
+            val aliceSession = mockk<DefaultWebSocketServerSession>()
+            coEvery { aliceSession.send(any<Frame>()) } returns Unit
+
+            val payload = GroupAddedPayload(conversationId = "conv-1", userId = "bob")
+            val envelopeJson = Json.encodeToString(SqsEnvelope(SqsEnvelope.GROUP_ADDED, Json.encodeToString(payload)))
+
+            stubReceiveOnce(ReceiveMessageResponse.builder().messages(buildSqsMessage(envelopeJson)).build())
+
+            every { conversationRegistry.getMembers("conv-1") } returns listOf("alice", "bob")
+            every { sessionStore.get("bob") } returns null
+            every { sessionStore.get("alice") } returns aliceSession
+            every { sessionStore.getAll() } returns setOf("alice")
+            every { userRegistry.getConnectedUsersFrom(setOf("bob")) } returns setOf("bob")
+
+            val job = launch { consumer.start("https://sqs/queue") }
+            job.join()
+
+            // alice receives bob's presence event
+            coVerify(exactly = 1) { aliceSession.send(any<Frame>()) }
         }
 }
