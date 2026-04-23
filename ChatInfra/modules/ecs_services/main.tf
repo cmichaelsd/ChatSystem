@@ -9,37 +9,63 @@ resource "aws_ecs_task_definition" "apiserver" {
   cpu                      = 256
   memory                   = 512
   execution_role_arn       = var.execution_role_api_arn
+  task_role_arn            = var.apiserver_task_role_arn
 
-  container_definitions = jsonencode([{
-    name      = "apiserver"
-    image     = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.region}.amazonaws.com/chatsystem/apiserver:latest"
-    essential = true
+  container_definitions = jsonencode([
+    {
+      name      = "apiserver"
+      image     = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.region}.amazonaws.com/chatsystem/apiserver:latest"
+      essential = true
 
-    portMappings = [{
-      containerPort = 8000
-      protocol      = "tcp"
-    }]
+      portMappings = [{
+        containerPort = 8000
+        protocol      = "tcp"
+      }]
 
-    environment = [
-      { name = "CHAT_SERVER_URL", value = "http://${var.chatserver_nlb_dns_name}" },
-      { name = "CORS_ORIGINS", value = "https://${var.cloudfront_domain}" },
-    ]
+      environment = [
+        { name = "CHAT_SERVER_URL", value = "http://${var.chatserver_nlb_dns_name}" },
+        { name = "CORS_ORIGINS", value = "https://${var.cloudfront_domain}" },
+      ]
 
-    secrets = [
-      { name = "DATABASE_URL", valueFrom = "${var.db_secret_arn}:database_url::" },
-      { name = "SECRET_KEY", valueFrom = var.jwt_secret_arn },
-      { name = "INTERNAL_API_KEY", valueFrom = var.internal_api_key_arn },
-    ]
+      secrets = [
+        { name = "DATABASE_URL", valueFrom = "${var.db_secret_arn}:database_url::" },
+        { name = "SECRET_KEY", valueFrom = var.jwt_secret_arn },
+        { name = "INTERNAL_API_KEY", valueFrom = var.internal_api_key_arn },
+      ]
 
-    logConfiguration = {
-      logDriver = "awslogs"
-      options = {
-        awslogs-group         = var.apiserver_log_group
-        awslogs-region        = var.region
-        awslogs-stream-prefix = "apiserver"
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-group         = var.apiserver_log_group
+          awslogs-region        = var.region
+          awslogs-stream-prefix = "apiserver"
+        }
+      }
+    },
+    {
+      name      = "xray-daemon"
+      image     = "public.ecr.aws/xray/aws-xray-daemon:latest"
+      essential = false
+
+      portMappings = [{
+        containerPort = 2000
+        protocol      = "udp"
+      }]
+
+      environment = [
+        { name = "AWS_REGION", value = var.region },
+      ]
+
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-group         = var.apiserver_xray_log_group
+          awslogs-region        = var.region
+          awslogs-stream-prefix = "xray"
+        }
       }
     }
-  }])
+  ])
 }
 
 resource "aws_ecs_service" "apiserver" {
@@ -71,35 +97,61 @@ resource "aws_ecs_task_definition" "presenceserver" {
   cpu                      = 256
   memory                   = 512
   execution_role_arn       = var.execution_role_presenceserver_arn
+  task_role_arn            = var.presenceserver_task_role_arn
 
-  container_definitions = jsonencode([{
-    name      = "presenceserver"
-    image     = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.region}.amazonaws.com/chatsystem/presenceserver:latest"
-    essential = true
+  container_definitions = jsonencode([
+    {
+      name      = "presenceserver"
+      image     = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.region}.amazonaws.com/chatsystem/presenceserver:latest"
+      essential = true
 
-    portMappings = [{
-      containerPort = 8000
-      protocol      = "tcp"
-    }]
+      portMappings = [{
+        containerPort = 8000
+        protocol      = "tcp"
+      }]
 
-    environment = [
-      { name = "REDIS_URL", value = "rediss://${var.redis_address}:6379" }
-    ]
+      environment = [
+        { name = "REDIS_URL", value = "rediss://${var.redis_address}:6379" }
+      ]
 
-    secrets = [
-      { name = "SECRET_KEY", valueFrom = var.jwt_secret_arn },
-      { name = "INTERNAL_API_KEY", valueFrom = var.internal_api_key_arn },
-    ]
+      secrets = [
+        { name = "SECRET_KEY", valueFrom = var.jwt_secret_arn },
+        { name = "INTERNAL_API_KEY", valueFrom = var.internal_api_key_arn },
+      ]
 
-    logConfiguration = {
-      logDriver = "awslogs"
-      options = {
-        awslogs-group         = var.presenceserver_log_group
-        awslogs-region        = var.region
-        awslogs-stream-prefix = "presenceserver"
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-group         = var.presenceserver_log_group
+          awslogs-region        = var.region
+          awslogs-stream-prefix = "presenceserver"
+        }
+      }
+    },
+    {
+      name      = "xray-daemon"
+      image     = "public.ecr.aws/xray/aws-xray-daemon:latest"
+      essential = false
+
+      portMappings = [{
+        containerPort = 2000
+        protocol      = "udp"
+      }]
+
+      environment = [
+        { name = "AWS_REGION", value = var.region },
+      ]
+
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-group         = var.presenceserver_xray_log_group
+          awslogs-region        = var.region
+          awslogs-stream-prefix = "xray"
+        }
       }
     }
-  }])
+  ])
 }
 
 resource "aws_ecs_service" "presenceserver" {
@@ -133,35 +185,60 @@ resource "aws_ecs_task_definition" "chatserver" {
   execution_role_arn       = var.execution_role_chatserver_arn
   task_role_arn            = var.chatserver_task_role_arn
 
-  container_definitions = jsonencode([{
-    name      = "chatserver"
-    image     = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.region}.amazonaws.com/chatsystem/chatserver:latest"
-    essential = true
+  container_definitions = jsonencode([
+    {
+      name      = "chatserver"
+      image     = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.region}.amazonaws.com/chatsystem/chatserver:latest"
+      essential = true
 
-    portMappings = [{
-      containerPort = 8080
-      protocol      = "tcp"
-    }]
+      portMappings = [{
+        containerPort = 8080
+        protocol      = "tcp"
+      }]
 
-    environment = [
-      { name = "PRESENCE_SERVER_URL", value = "http://${var.internal_alb_dns_name}" },
-      { name = "CORS_ORIGINS", value = "https://${var.cloudfront_domain}" },
-    ]
+      environment = [
+        { name = "PRESENCE_SERVER_URL", value = "http://${var.internal_alb_dns_name}" },
+        { name = "CORS_ORIGINS", value = "https://${var.cloudfront_domain}" },
+      ]
 
-    secrets = [
-      { name = "JWT_SECRET", valueFrom = var.jwt_secret_arn },
-      { name = "INTERNAL_API_KEY", valueFrom = var.internal_api_key_arn },
-    ]
+      secrets = [
+        { name = "JWT_SECRET", valueFrom = var.jwt_secret_arn },
+        { name = "INTERNAL_API_KEY", valueFrom = var.internal_api_key_arn },
+      ]
 
-    logConfiguration = {
-      logDriver = "awslogs"
-      options = {
-        awslogs-group         = var.chatserver_log_group
-        awslogs-region        = var.region
-        awslogs-stream-prefix = "chatserver"
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-group         = var.chatserver_log_group
+          awslogs-region        = var.region
+          awslogs-stream-prefix = "chatserver"
+        }
+      }
+    },
+    {
+      name      = "xray-daemon"
+      image     = "public.ecr.aws/xray/aws-xray-daemon:latest"
+      essential = false
+
+      portMappings = [{
+        containerPort = 2000
+        protocol      = "udp"
+      }]
+
+      environment = [
+        { name = "AWS_REGION", value = var.region },
+      ]
+
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-group         = var.chatserver_xray_log_group
+          awslogs-region        = var.region
+          awslogs-stream-prefix = "xray"
+        }
       }
     }
-  }])
+  ])
 }
 
 resource "aws_ecs_service" "chatserver" {

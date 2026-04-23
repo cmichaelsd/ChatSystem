@@ -1,5 +1,6 @@
 package org.chatserver.plugins
 
+import com.amazonaws.xray.AWSXRay
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.auth.authenticate
@@ -49,8 +50,10 @@ fun Application.configureSockets() {
                 }
 
                 logger.info("User $userId connected")
+                AWSXRay.beginSegment("ws-connect $userId")
                 userRegistry.register(userId)
                 sessionStore.add(userId, this)
+                AWSXRay.endSegment()
 
                 try {
                     val groupmates = conversationRegistry.getGroupmates(userId)
@@ -80,9 +83,13 @@ fun Application.configureSockets() {
                         }
                     }
                 } finally {
+                    AWSXRay.beginSegment("ws-disconnect $userId")
                     sessionStore.remove(userId)
-                    userRegistry.deregister(userId)
-                    broadcastPresence(userId, online = false, serverRegistry, sqsClient)
+                    val deregistered = userRegistry.deregister(userId)
+                    if (deregistered) {
+                        broadcastPresence(userId, online = false, serverRegistry, sqsClient)
+                    }
+                    AWSXRay.endSegment()
                     logger.info("User $userId disconnected")
                 }
             }

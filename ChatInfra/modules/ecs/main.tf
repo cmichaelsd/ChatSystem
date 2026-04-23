@@ -219,3 +219,126 @@ resource "aws_iam_role_policy" "chatserver_sqs" {
     }]
   })
 }
+
+resource "aws_iam_role_policy" "chatserver_xray" {
+  name = "${var.project_name}-chatserver-xray"
+  role = aws_iam_role.chatserver_task.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "xray:PutTraceSegments",
+        "xray:PutTelemetryRecords",
+        "xray:GetSamplingRules",
+        "xray:GetSamplingTargets",
+        "xray:GetSamplingStatisticSummaries",
+      ]
+      Resource = "*"
+    }]
+  })
+}
+
+# --- ApiServer task role ---
+
+resource "aws_iam_role" "apiserver_task" {
+  name = "${var.project_name}-apiserver-task"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "ecs-tasks.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+      Condition = {
+        ArnLike = {
+          "aws:SourceArn" = "arn:aws:ecs:${var.region}:${data.aws_caller_identity.current.account_id}:*"
+        }
+        StringEquals = {
+          "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+        }
+      }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "apiserver_xray" {
+  name = "${var.project_name}-apiserver-xray"
+  role = aws_iam_role.apiserver_task.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "xray:PutTraceSegments",
+        "xray:PutTelemetryRecords",
+        "xray:GetSamplingRules",
+        "xray:GetSamplingTargets",
+        "xray:GetSamplingStatisticSummaries",
+      ]
+      Resource = "*"
+    }]
+  })
+}
+
+# --- PresenceServer task role ---
+
+resource "aws_iam_role" "presenceserver_task" {
+  name = "${var.project_name}-presenceserver-task"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "ecs-tasks.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+      Condition = {
+        ArnLike = {
+          "aws:SourceArn" = "arn:aws:ecs:${var.region}:${data.aws_caller_identity.current.account_id}:*"
+        }
+        StringEquals = {
+          "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+        }
+      }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "presenceserver_xray" {
+  name = "${var.project_name}-presenceserver-xray"
+  role = aws_iam_role.presenceserver_task.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "xray:PutTraceSegments",
+        "xray:PutTelemetryRecords",
+        "xray:GetSamplingRules",
+        "xray:GetSamplingTargets",
+        "xray:GetSamplingStatisticSummaries",
+      ]
+      Resource = "*"
+    }]
+  })
+}
+
+# --- X-Ray daemon log groups ---
+
+resource "aws_cloudwatch_log_group" "apiserver_xray" {
+  name              = "/ecs/${var.project_name}/apiserver-xray"
+  retention_in_days = 365
+}
+
+resource "aws_cloudwatch_log_group" "chatserver_xray" {
+  name              = "/ecs/${var.project_name}/chatserver-xray"
+  retention_in_days = 365
+}
+
+resource "aws_cloudwatch_log_group" "presenceserver_xray" {
+  name              = "/ecs/${var.project_name}/presenceserver-xray"
+  retention_in_days = 365
+}

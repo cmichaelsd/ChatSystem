@@ -11,10 +11,12 @@ import org.chatserver.plugins.configureRouting
 import org.chatserver.plugins.configureSerialization
 import org.chatserver.plugins.configureSockets
 import org.chatserver.plugins.configureSqs
+import org.chatserver.plugins.configureXRay
 
 fun main() {
     embeddedServer(CIO, port = 8080) {
         configureDI()
+        configureXRay()
         configureCors()
         configureSerialization()
         configureSqs()

@@ -1,9 +1,14 @@
+import logging
+
 from redis.asyncio import Redis
 
 from app.config import settings
 
+logger = logging.getLogger(__name__)
+
 
 async def set_online(user_id: str, redis: Redis) -> None:
+    logger.info("set_online user_id=%s ttl=%ds", user_id, settings.heartbeat_ttl_seconds)
     await redis.set(f"presence:{user_id}", "1", ex=settings.heartbeat_ttl_seconds)
 
 

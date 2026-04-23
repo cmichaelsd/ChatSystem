@@ -3,3 +3,4 @@ uvicorn[standard]
 pydantic-settings
 redis[asyncio]
 python-jose[cryptography]
+aws-xray-sdk

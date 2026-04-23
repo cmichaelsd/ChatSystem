@@ -3,7 +3,8 @@ import logging
 import sys
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from aws_xray_sdk.core import xray_recorder, patch
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
@@ -19,6 +20,8 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)-5s %(name)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+patch(["sqlalchemy"])
 
 MAX_RETRIES = 10
 RETRY_DELAY = 2
@@ -47,6 +50,16 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="ChatSystem API", lifespan=lifespan)
+
+
+@app.middleware("http")
+async def xray_middleware(request: Request, call_next):
+    xray_recorder.begin_segment(f"{request.method} {request.url.path}")
+    try:
+        return await call_next(request)
+    finally:
+        xray_recorder.end_segment()
+
 
 app.add_middleware(
     CORSMiddleware,

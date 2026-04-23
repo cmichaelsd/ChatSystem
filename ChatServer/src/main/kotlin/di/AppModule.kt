@@ -12,7 +12,9 @@ import org.chatserver.services.sqs.SqsQueueManager
 import org.chatserver.session.SessionStore
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
+import com.amazonaws.xray.interceptors.TracingInterceptor
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider
+import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import software.amazon.awssdk.services.sqs.SqsClient
@@ -29,6 +31,7 @@ val appModule =
             DynamoDbClient.builder()
                 .region(Region.US_WEST_1)
                 .credentialsProvider(DefaultCredentialsProvider.create())
+                .overrideConfiguration(ClientOverrideConfiguration.builder().addExecutionInterceptor(TracingInterceptor()).build())
                 .apply { if (endpoint != null) endpointOverride(URI.create(endpoint)) }
                 .build()
         }
@@ -38,6 +41,7 @@ val appModule =
             SqsClient.builder()
                 .region(Region.US_WEST_1)
                 .credentialsProvider(DefaultCredentialsProvider.create())
+                .overrideConfiguration(ClientOverrideConfiguration.builder().addExecutionInterceptor(TracingInterceptor()).build())
                 .apply { if (endpoint != null) endpointOverride(URI.create(endpoint)) }
                 .build()
         }

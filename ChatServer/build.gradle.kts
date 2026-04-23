@@ -18,6 +18,7 @@ dependencies {
     val koinVersion = "3.5.6"
     val awsSdkVersion = "2.28.0"
 
+    val xrayVersion = "2.15.3"
     val mockkVersion = "1.13.10"
 
     testImplementation(kotlin("test"))
@@ -50,6 +51,10 @@ dependencies {
     implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-cio:$ktorVersion")
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+
+    // X-Ray
+    implementation("com.amazonaws:aws-xray-recorder-sdk-core:$xrayVersion")
+    implementation("com.amazonaws:aws-xray-recorder-sdk-aws-sdk-v2:$xrayVersion")
 
     // Logging
     implementation("ch.qos.logback:logback-classic:1.4.14")
