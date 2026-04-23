@@ -1,16 +1,16 @@
 module "vpc" {
-  source       = "./modules/vpc"
+  source       = "../../modules/vpc"
   project_name = var.project_name
 }
 
 module "security_groups" {
-  source       = "./modules/security_groups"
+  source       = "../../modules/security_groups"
   project_name = var.project_name
   vpc_id       = module.vpc.vpc_id
 }
 
 module "alb" {
-  source             = "./modules/alb"
+  source             = "../../modules/alb"
   project_name       = var.project_name
   vpc_id             = module.vpc.vpc_id
   alb_sg_id          = module.security_groups.alb_sg_id
@@ -20,12 +20,12 @@ module "alb" {
 }
 
 module "dynamodb" {
-  source       = "./modules/dynamodb"
+  source       = "../../modules/dynamodb"
   project_name = var.project_name
 }
 
 module "rds" {
-  source             = "./modules/rds"
+  source             = "../../modules/rds"
   project_name       = var.project_name
   db_name            = var.db_name
   private_subnet_ids = module.vpc.private_subnets
@@ -33,14 +33,14 @@ module "rds" {
 }
 
 module "elasticache" {
-  source             = "./modules/elasticache"
+  source             = "../../modules/elasticache"
   project_name       = var.project_name
   private_subnet_ids = module.vpc.private_subnets
   elasticache_sg_id  = module.security_groups.elasticache_sg_id
 }
 
 module "secrets" {
-  source       = "./modules/secrets"
+  source       = "../../modules/secrets"
   project_name = var.project_name
   db_name      = var.db_name
   db_password  = module.rds.db_password
@@ -48,7 +48,7 @@ module "secrets" {
 }
 
 module "ecs" {
-  source               = "./modules/ecs"
+  source               = "../../modules/ecs"
   project_name         = var.project_name
   region               = var.aws_region
   db_secret_arn        = module.secrets.db_secret_arn
@@ -58,19 +58,19 @@ module "ecs" {
 }
 
 module "static_site" {
-  source                  = "./modules/static_site"
+  source                  = "../../modules/static_site"
   project_name            = var.project_name
   alb_dns_name            = module.alb.public_alb_dns_name
   chatserver_nlb_dns_name = module.alb.chatserver_nlb_dns_name
 }
 
 module "cloudtrail" {
-  source       = "./modules/cloudtrail"
+  source       = "../../modules/cloudtrail"
   project_name = var.project_name
 }
 
 module "ecs_services" {
-  source                            = "./modules/ecs_services"
+  source                            = "../../modules/ecs_services"
   project_name                      = var.project_name
   region                            = var.aws_region
   cluster_id                        = module.ecs.cluster_id
