@@ -18,11 +18,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v3
       - name: Terraform Initialize
-        working-directory: ChatInfra
+        working-directory: ChatInfra/environments/dev
         run: terraform init -backend=false
-      
+
       - name: Terraform validate
-        working-directory: ChatInfra
+        working-directory: ChatInfra/environments/dev
         run: terraform validate
 
   # If terraform is valid check terraform formatting
@@ -35,7 +35,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v3
       - name: Check formatting
-        working-directory: ChatInfra
+        working-directory: ChatInfra/environments/dev
         run: terraform fmt -recursive -check
 
   # If terraform format is valid check server formatting
