@@ -3,21 +3,45 @@ name: CI
 on:
   pull_request:
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  terraform-format:
-    name: Terraform Format
+  # Ensure terraform is valid
+  terraform-validate:
+    name: Terraform validate
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v3
+      - name: Terraform Initialize
+        working-directory: ChatInfra/environments/dev
+        run: terraform init -backend=false
+
+      - name: Terraform validate
+        working-directory: ChatInfra/environments/dev
+        run: terraform validate
+
+  # If terraform is valid check terraform formatting
+  terraform-format:
+    name: Terraform Format
+    runs-on: ubuntu-latest
+    needs: [terraform-validate]
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
       - name: Check formatting
-        working-directory: ChatInfra
+        working-directory: ChatInfra/environments/dev
         run: terraform fmt -recursive -check
 
+  # If terraform format is valid check server formatting
   chat-server-format:
     name: ChatServer Format
     runs-on: ubuntu-latest
+    needs: [terraform-format]
 
     steps:
       - uses: actions/checkout@v4
@@ -31,6 +55,7 @@ jobs:
         working-directory: ChatServer
         run: ./gradlew ktlintCheck
 
+  # If terraform formet is vaild check api tests
   api-tests:
     name: API Tests
     runs-on: ubuntu-latest
@@ -54,10 +79,11 @@ jobs:
         working-directory: ApiServer
         run: python -m pytest
 
+  # If terraform format is valid check presence tests
   presence-tests:
     name: Presence Tests
     runs-on: ubuntu-latest
-    needs: [ terraform-format ]
+    needs: [terraform-format]
 
     steps:
       - uses: actions/checkout@v4
@@ -77,6 +103,7 @@ jobs:
         working-directory: PresenceServer
         run: python -m pytest
 
+  # If chatserver format is valid check chatserver tests
   chat-server-tests:
     name: Chat Server Tests
     runs-on: ubuntu-latest
