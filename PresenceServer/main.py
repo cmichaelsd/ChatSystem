@@ -1,6 +1,6 @@
 import logging
 
-from aws_xray_sdk.core import xray_recorder, patch
+from aws_xray_sdk.core import xray_recorder
 from fastapi import FastAPI, Request
 
 from app.routers import presence
@@ -9,8 +9,6 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
 )
-
-patch(["redis"])
 
 app = FastAPI()
 app.include_router(presence.router)

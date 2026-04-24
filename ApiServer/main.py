@@ -3,7 +3,7 @@ import logging
 import sys
 from contextlib import asynccontextmanager
 
-from aws_xray_sdk.core import xray_recorder, patch
+from aws_xray_sdk.core import xray_recorder
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
@@ -20,8 +20,6 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)-5s %(name)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
-
-patch(["sqlalchemy"])
 
 MAX_RETRIES = 10
 RETRY_DELAY = 2
