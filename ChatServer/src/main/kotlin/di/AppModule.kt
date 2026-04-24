@@ -1,5 +1,6 @@
 package org.chatserver.di
 
+import com.amazonaws.xray.interceptors.TracingInterceptor
 import org.chatserver.data.registry.ConversationRegistry
 import org.chatserver.data.registry.ServerRegistry
 import org.chatserver.data.registry.UserRegistry
@@ -12,7 +13,6 @@ import org.chatserver.services.sqs.SqsQueueManager
 import org.chatserver.session.SessionStore
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
-import com.amazonaws.xray.interceptors.TracingInterceptor
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration
 import software.amazon.awssdk.regions.Region
