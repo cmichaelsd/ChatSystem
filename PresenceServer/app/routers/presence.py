@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, Depends
 from redis.asyncio import Redis
 
@@ -5,6 +7,8 @@ from app.dependencies import get_current_user_id, verify_internal_key
 from app.redis import get_redis
 from app.repos.presence import set_online, is_online, are_online
 from app.schemas.presence import HeartbeatRequest, PresenceResponse, BatchPresenceRequest, BatchPresenceResponse
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/presence", tags=["presence"])
 
@@ -15,6 +19,7 @@ async def heartbeat(
     redis: Redis = Depends(get_redis),
     _: None = Depends(verify_internal_key),
 ):
+    logger.info("heartbeat user_ids=%s", payload.user_ids)
     for user_id in payload.user_ids:
         await set_online(user_id, redis)
 
@@ -26,6 +31,7 @@ async def get_presence_batch(
     _: None = Depends(verify_internal_key),
 ):
     presence = await are_online(payload.user_ids, redis)
+    logger.info("batch presence check user_ids=%s result=%s", payload.user_ids, presence)
     return BatchPresenceResponse(presence=presence)
 
 
@@ -36,4 +42,5 @@ async def get_presence(
     _: str = Depends(get_current_user_id),
 ):
     online = await is_online(user_id, redis)
+    logger.info("presence check user_id=%s online=%s", user_id, online)
     return PresenceResponse(user_id=user_id, online=online)

@@ -26,6 +26,14 @@ variable "chatserver_task_role_arn" {
   type = string
 }
 
+variable "apiserver_task_role_arn" {
+  type = string
+}
+
+variable "presenceserver_task_role_arn" {
+  type = string
+}
+
 variable "private_subnet_ids" {
   type = list(string)
 }
@@ -85,4 +93,16 @@ variable "presenceserver_log_group" {
 variable "cloudfront_domain" {
   type        = string
   description = "CloudFront domain used as CORS allowed origin for ApiServer and ChatServer"
+}
+
+variable "apiserver_xray_log_group" {
+  type = string
+}
+
+variable "chatserver_xray_log_group" {
+  type = string
+}
+
+variable "presenceserver_xray_log_group" {
+  type = string
 }

@@ -78,6 +78,8 @@ module "ecs_services" {
   execution_role_chatserver_arn     = module.ecs.execution_role_chatserver_arn
   execution_role_presenceserver_arn = module.ecs.execution_role_presenceserver_arn
   chatserver_task_role_arn          = module.ecs.chatserver_task_role_arn
+  apiserver_task_role_arn           = module.ecs.apiserver_task_role_arn
+  presenceserver_task_role_arn      = module.ecs.presenceserver_task_role_arn
   private_subnet_ids                = module.vpc.private_subnets
   ecs_tasks_sg_id                   = module.security_groups.ecs_tasks_sg_id
   chatserver_nlb_dns_name           = module.alb.chatserver_nlb_dns_name
@@ -92,5 +94,8 @@ module "ecs_services" {
   apiserver_log_group               = module.ecs.apiserver_log_group
   chatserver_log_group              = module.ecs.chatserver_log_group
   presenceserver_log_group          = module.ecs.presenceserver_log_group
+  apiserver_xray_log_group          = module.ecs.apiserver_xray_log_group
+  chatserver_xray_log_group         = module.ecs.chatserver_xray_log_group
+  presenceserver_xray_log_group     = module.ecs.presenceserver_xray_log_group
   cloudfront_domain                 = module.static_site.cloudfront_domain
 }

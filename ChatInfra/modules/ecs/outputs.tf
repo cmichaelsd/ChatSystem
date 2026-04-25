@@ -18,6 +18,14 @@ output "chatserver_task_role_arn" {
   value = aws_iam_role.chatserver_task.arn
 }
 
+output "apiserver_task_role_arn" {
+  value = aws_iam_role.apiserver_task.arn
+}
+
+output "presenceserver_task_role_arn" {
+  value = aws_iam_role.presenceserver_task.arn
+}
+
 output "apiserver_log_group" {
   value = aws_cloudwatch_log_group.apiserver.name
 }
@@ -28,4 +36,16 @@ output "chatserver_log_group" {
 
 output "presenceserver_log_group" {
   value = aws_cloudwatch_log_group.presenceserver.name
+}
+
+output "apiserver_xray_log_group" {
+  value = aws_cloudwatch_log_group.apiserver_xray.name
+}
+
+output "chatserver_xray_log_group" {
+  value = aws_cloudwatch_log_group.chatserver_xray.name
+}
+
+output "presenceserver_xray_log_group" {
+  value = aws_cloudwatch_log_group.presenceserver_xray.name
 }

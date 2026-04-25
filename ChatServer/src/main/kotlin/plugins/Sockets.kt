@@ -1,5 +1,6 @@
 package org.chatserver.plugins
 
+import com.amazonaws.xray.AWSXRay
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.auth.authenticate
@@ -22,7 +23,7 @@ import org.chatserver.models.PresenceEvent
 import org.chatserver.models.SqsEnvelope
 import org.chatserver.routing.MessageRouter
 import org.chatserver.session.SessionStore
-import org.koin.ktor.ext.inject
+import org.koin.ktor.ext.getKoin
 import org.slf4j.LoggerFactory
 import software.amazon.awssdk.services.sqs.SqsClient
 
@@ -31,13 +32,14 @@ private val logger = LoggerFactory.getLogger("Sockets")
 fun Application.configureSockets() {
     install(WebSockets)
 
-    val userRegistry by inject<UserRegistry>()
-    val conversationRegistry by inject<ConversationRegistry>()
-    val sessionStore by inject<SessionStore>()
-    val messageRouter by inject<MessageRouter>()
-    val pendingMessageRepository by inject<PendingMessageRepository>()
-    val serverRegistry by inject<ServerRegistry>()
-    val sqsClient by inject<SqsClient>()
+    val koin = getKoin()
+    val userRegistry = koin.get<UserRegistry>()
+    val conversationRegistry = koin.get<ConversationRegistry>()
+    val sessionStore = koin.get<SessionStore>()
+    val messageRouter = koin.get<MessageRouter>()
+    val pendingMessageRepository = koin.get<PendingMessageRepository>()
+    val serverRegistry = koin.get<ServerRegistry>()
+    val sqsClient = koin.get<SqsClient>()
 
     routing {
         authenticate("auth-jwt") {
@@ -49,8 +51,10 @@ fun Application.configureSockets() {
                 }
 
                 logger.info("User $userId connected")
+                AWSXRay.beginSegment("ws-connect $userId")
                 userRegistry.register(userId)
                 sessionStore.add(userId, this)
+                AWSXRay.endSegment()
 
                 try {
                     val groupmates = conversationRegistry.getGroupmates(userId)
@@ -80,9 +84,13 @@ fun Application.configureSockets() {
                         }
                     }
                 } finally {
+                    AWSXRay.beginSegment("ws-disconnect $userId")
                     sessionStore.remove(userId)
-                    userRegistry.deregister(userId)
-                    broadcastPresence(userId, online = false, serverRegistry, sqsClient)
+                    val deregistered = userRegistry.deregister(userId)
+                    if (deregistered) {
+                        broadcastPresence(userId, online = false, serverRegistry, sqsClient)
+                    }
+                    AWSXRay.endSegment()
                     logger.info("User $userId disconnected")
                 }
             }

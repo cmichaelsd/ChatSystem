@@ -73,13 +73,21 @@ class UserRegistry(
         return connected
     }
 
-    fun deregister(userId: String) {
-        dynamoClient.deleteItem(
-            DeleteItemRequest.builder()
-                .tableName(tableName)
-                .key(mapOf("userId" to AttributeValue.fromS(userId)))
-                .build(),
-        )
-        logger.info("User $userId deregistered from server $serverId")
+    fun deregister(userId: String): Boolean {
+        return try {
+            dynamoClient.deleteItem(
+                DeleteItemRequest.builder()
+                    .tableName(tableName)
+                    .key(mapOf("userId" to AttributeValue.fromS(userId)))
+                    .conditionExpression("serverId = :sid")
+                    .expressionAttributeValues(mapOf(":sid" to AttributeValue.fromS(serverId)))
+                    .build(),
+            )
+            logger.info("User $userId deregistered from server $serverId")
+            true
+        } catch (e: software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException) {
+            logger.info("User $userId already claimed by another server, skipping deregister")
+            false
+        }
     }
 }
