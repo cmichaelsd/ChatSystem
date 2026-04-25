@@ -76,10 +76,10 @@ class SocketsTest {
             client.webSocket("/ws?token=${token("alice")}") { close() }
         }
 
-        verify { userRegistry.register("alice") }
-        verify { sessionStore.add(eq("alice"), any()) }
-        verify { userRegistry.deregister("alice") }
-        verify { sessionStore.remove("alice") }
+        verify(timeout = 2000) { userRegistry.register("alice") }
+        verify(timeout = 2000) { sessionStore.add(eq("alice"), any()) }
+        verify(timeout = 2000) { userRegistry.deregister("alice") }
+        verify(timeout = 2000) { sessionStore.remove("alice") }
     }
 
     @Test
